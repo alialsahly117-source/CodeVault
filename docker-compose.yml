@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: codevault-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: codevault
+      POSTGRES_PASSWORD: codevault
+      POSTGRES_DB: codevault
+    ports:
+      - "5434:5432"
+    volumes:
+      - codevault_pgdata:/var/lib/postgresql/data
+
+volumes:
+  codevault_pgdata:

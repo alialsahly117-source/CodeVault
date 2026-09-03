@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "@codevault/config/theme.css";
+
+/* Admin gets its own accent (violet) to stay visually distinct from the public site. */
+@theme {
+  --color-accent: #8b5cf6;
+  --color-accent-hover: #a685f9;
+  --color-accent-muted: #241a3d;
+
+  --color-bg: #05070d;
+  --color-bg-elevated: #0b0f1a;
+  --color-bg-card: #0e1424;
+  --color-bg-hover: #131b30;
+  --color-border: #1b2236;
+  --color-border-strong: #262f47;
+}

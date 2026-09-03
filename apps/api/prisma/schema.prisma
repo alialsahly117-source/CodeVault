@@ -1,0 +1,296 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  EDITOR
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum CategoryType {
+  PROGRAMMING
+  AI
+  PROMPT_TYPE
+  GENERAL
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum ContentStatus {
+  PUBLISHED
+  HIDDEN
+  PENDING
+}
+
+enum ItemType {
+  CODE
+  PROMPT
+}
+
+enum ReportReason {
+  SPAM
+  MALICIOUS_CODE
+  COPYRIGHT
+  INAPPROPRIATE
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+  ACTION_TAKEN
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String?
+  googleId     String?    @unique
+  role         Role       @default(USER)
+  status       UserStatus @default(ACTIVE)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  profile    Profile?
+  codes      Code[]
+  prompts    Prompt[]
+  likes      Like[]
+  savedItems SavedItem[]
+  copyEvents CopyEvent[]
+  reports    Report[]    @relation("ReporterReports")
+  adminLogs  AdminLog[]
+
+  @@map("users")
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String
+  avatarUrl   String?
+  bio         String?
+  createdAt   DateTime @default(now())
+
+  @@map("profiles")
+}
+
+model Category {
+  id       String        @id @default(cuid())
+  name     String
+  slug     String        @unique
+  type     CategoryType  @default(GENERAL)
+  parentId String?
+  parent   Category?     @relation("CategoryChildren", fields: [parentId], references: [id])
+  children Category[]    @relation("CategoryChildren")
+  codes    Code[]
+  prompts  Prompt[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id         String      @id @default(cuid())
+  name       String      @unique
+  slug       String      @unique
+  codeTags   CodeTag[]
+  promptTags PromptTag[]
+
+  @@map("tags")
+}
+
+model Code {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  content     String
+  language    String
+  framework   String?
+  categoryId  String?
+  category    Category?     @relation(fields: [categoryId], references: [id])
+  authorId    String
+  author      User          @relation(fields: [authorId], references: [id])
+  visibility  Visibility    @default(PUBLIC)
+  status      ContentStatus @default(PUBLISHED)
+  copyCount   Int           @default(0)
+  likeCount   Int           @default(0)
+  viewCount   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tags       CodeTag[]
+  likes      Like[]
+  savedItems SavedItem[]
+  copyEvents CopyEvent[]
+  reports    Report[]
+
+  @@index([language])
+  @@index([createdAt])
+  @@map("codes")
+}
+
+model CodeTag {
+  codeId String
+  tagId  String
+  code   Code   @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([codeId, tagId])
+  @@map("code_tags")
+}
+
+model Prompt {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  content     String
+  categoryId  String?
+  category    Category?     @relation(fields: [categoryId], references: [id])
+  aiModel     String?
+  variables   Json?
+  authorId    String
+  author      User          @relation(fields: [authorId], references: [id])
+  visibility  Visibility    @default(PUBLIC)
+  status      ContentStatus @default(PUBLISHED)
+  copyCount   Int           @default(0)
+  likeCount   Int           @default(0)
+  viewCount   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tags       PromptTag[]
+  likes      Like[]
+  savedItems SavedItem[]
+  copyEvents CopyEvent[]
+  reports    Report[]
+
+  @@index([createdAt])
+  @@map("prompts")
+}
+
+model PromptTag {
+  promptId String
+  tagId    String
+  prompt   Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([promptId, tagId])
+  @@map("prompt_tags")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemType  ItemType
+  codeId    String?
+  code      Code?    @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  promptId  String?
+  prompt    Prompt?  @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, codeId])
+  @@unique([userId, promptId])
+  @@map("likes")
+}
+
+model SavedItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemType  ItemType
+  codeId    String?
+  code      Code?    @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  promptId  String?
+  prompt    Prompt?  @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, codeId])
+  @@unique([userId, promptId])
+  @@map("saved_items")
+}
+
+model CopyEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  itemType  ItemType
+  codeId    String?
+  code      Code?    @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  promptId  String?
+  prompt    Prompt?  @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("copy_events")
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  reporterId String
+  reporter   User         @relation("ReporterReports", fields: [reporterId], references: [id], onDelete: Cascade)
+  itemType   ItemType
+  codeId     String?
+  code       Code?        @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  promptId   String?
+  prompt     Prompt?      @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  reason     ReportReason
+  details    String?
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+
+  @@map("reports")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+model AdminLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id])
+  action     String
+  targetType String?
+  targetId   String?
+  meta       Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("admin_logs")
+}
+
+model Setting {
+  id                String   @id @default("singleton")
+  siteName          String   @default("CodeVault")
+  maintenanceMode    Boolean  @default(false)
+  allowRegistration Boolean  @default(true)
+  updatedAt         DateTime @updatedAt
+
+  @@map("settings")
+}

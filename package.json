@@ -1,0 +1,19 @@
+{
+  "name": "codevault",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=@codevault/api",
+    "dev:web": "npm run dev --workspace=@codevault/web",
+    "dev:admin": "npm run dev --workspace=@codevault/admin",
+    "build:api": "npm run build --workspace=@codevault/api",
+    "build:web": "npm run build --workspace=@codevault/web",
+    "build:admin": "npm run build --workspace=@codevault/admin",
+    "db:migrate": "npm run db:migrate --workspace=@codevault/api",
+    "db:seed": "npm run db:seed --workspace=@codevault/api"
+  }
+}
