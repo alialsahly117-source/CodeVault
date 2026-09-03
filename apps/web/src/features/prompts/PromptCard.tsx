@@ -23,7 +23,7 @@ export function PromptCard({ prompt }: { prompt: Prompt }) {
       <p className="mt-3 line-clamp-2 text-sm text-text-secondary">{prompt.description}</p>
 
       <div className="mt-4 flex flex-wrap gap-1.5">
-        {prompt.tags.slice(0, 3).map(({ tag }) => (
+        {(prompt.tags ?? []).slice(0, 3).map(({ tag }) => (
           <Badge key={tag.id}>{tag.name}</Badge>
         ))}
       </div>

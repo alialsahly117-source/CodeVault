@@ -26,7 +26,7 @@ export function CodeCard({ code }: { code: Code }) {
       <p className="mt-3 line-clamp-2 text-sm text-text-secondary">{code.description}</p>
 
       <div className="mt-4 flex flex-wrap gap-1.5">
-        {code.tags.slice(0, 3).map(({ tag }) => (
+        {(code.tags ?? []).slice(0, 3).map(({ tag }) => (
           <Badge key={tag.id}>{tag.name}</Badge>
         ))}
       </div>
