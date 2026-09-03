@@ -1,13 +1,23 @@
 import type { CookieOptions, Response } from "express";
 
 const secure = process.env.COOKIE_SECURE === "true";
-// In production, set COOKIE_DOMAIN=".codevault.com" so the auth cookie set by
-// api.codevault.com is also readable by admin.codevault.com and codevault.com.
-// Leave unset for local dev — cookies then default to the exact host (which,
-// for "localhost", is already shared across every localhost port).
+// "lax" works for local dev (web/admin/api all share the "localhost" host).
+// In production the three apps live on unrelated domains (e.g. *.netlify.app
+// frontends calling an *.onrender.com API) — that is a genuinely cross-site
+// request, so the cookie needs SameSite=None (which browsers only honor when
+// Secure is also set). Set COOKIE_SAMESITE=none in that deployment's env.
+const sameSite = (process.env.COOKIE_SAMESITE as CookieOptions["sameSite"]) || "lax";
+// SameSite=None is rejected by browsers unless Secure is also set.
+const effectiveSecure = sameSite === "none" ? true : secure;
+
+// Only relevant when the frontends share a REGISTRABLE parent domain with the
+// API (e.g. api.codevault.com + admin.codevault.com under ".codevault.com").
+// Leave unset for local dev, and leave unset for the netlify.app/onrender.com
+// setup above — those domains share nothing, so a Domain attribute can't help
+// and SameSite=None + CORS is what makes that case work instead.
 const domain = process.env.COOKIE_DOMAIN || undefined;
 
-const base: CookieOptions = { httpOnly: true, secure, sameSite: "lax", domain };
+const base: CookieOptions = { httpOnly: true, secure: effectiveSecure, sameSite, domain };
 
 export function setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
   res.cookie("accessToken", accessToken, { ...base, maxAge: 15 * 60 * 1000, path: "/" });

@@ -27,12 +27,18 @@ services:
         value: 30d
       - key: COOKIE_SECURE
         value: "true"
+      # web/admin (*.netlify.app) and this API (*.onrender.com) are unrelated
+      # domains, so the auth cookie needs SameSite=None to survive the
+      # cross-site fetch — see apps/api/src/lib/cookies.ts.
+      - key: COOKIE_SAMESITE
+        value: "none"
       - key: GOOGLE_CLIENT_ID
         value: ""
       - key: GOOGLE_CLIENT_SECRET
         value: ""
+      # Update this if the service's onrender.com hostname ever changes.
       - key: GOOGLE_CALLBACK_URL
-        value: https://codevault-api.onrender.com/api/auth/google/callback
+        value: https://codevault-api-9mo5.onrender.com/api/auth/google/callback
 
 databases:
   - name: codevault-db
