@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth/AuthContext";
-import { authService } from "../../services/auth.service";
 import { Button } from "@codevault/ui";
 import toast from "react-hot-toast";
 
@@ -16,15 +15,14 @@ const links = [
 ];
 
 export function Navbar() {
-  const { user, isAuthenticated, isStaff, refetch } = useAuth();
+  const { user, isAuthenticated, isStaff, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   async function handleLogout() {
-    await authService.logout();
-    refetch();
     setMenuOpen(false);
+    await logout();
     toast.success("تم تسجيل الخروج");
     navigate("/");
   }

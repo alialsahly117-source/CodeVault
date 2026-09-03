@@ -2,7 +2,6 @@ import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../features/auth/AuthContext";
-import { authService } from "../services/auth.service";
 import { ROLE_LABELS } from "@codevault/config";
 
 interface NavItem {
@@ -94,14 +93,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function AdminLayout() {
-  const { user, refetch } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   async function handleLogout() {
-    await authService.logout();
-    refetch();
+    await logout();
     toast.success("تم تسجيل الخروج");
     navigate("/login");
   }

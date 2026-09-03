@@ -11,6 +11,7 @@ interface AuthContextValue {
   /** True for EDITOR/MODERATOR/ADMIN — used only to surface a link out to the separate admin app. */
   isStaff: boolean;
   refetch: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -34,6 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetch: () => {
       queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       refetch();
+    },
+    logout: async () => {
+      await authService.logout();
+      // Set the cache straight to null instead of waiting on a refetch —
+      // the user should see the logged-out state the instant they click,
+      // not after a round trip (or a manual page reload).
+      queryClient.setQueryData(["auth", "me"], null);
     },
   };
 

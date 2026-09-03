@@ -13,6 +13,7 @@ interface AuthContextValue {
   isAdmin: boolean;
   isModerator: boolean;
   refetch: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -39,6 +40,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetch: () => {
       queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       refetch();
+    },
+    logout: async () => {
+      await authService.logout();
+      queryClient.setQueryData(["auth", "me"], null);
     },
   };
 
