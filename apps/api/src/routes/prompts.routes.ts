@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
-import { requireAuth, optionalAuth } from "../middleware/auth.js";
+import { requireAuth, optionalAuth, requireRole } from "../middleware/auth.js";
 import { writeRateLimit, apiRateLimit } from "../middleware/rateLimit.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { createPromptSchema, updatePromptSchema, listQuerySchema, reportSchema } from "../validators/content.validators.js";
@@ -93,7 +93,7 @@ router.get("/:id", optionalAuth, async (req, res, next) => {
   }
 });
 
-router.post("/", requireAuth, writeRateLimit, async (req, res, next) => {
+router.post("/", requireAuth, requireRole("EDITOR", "MODERATOR", "ADMIN"), writeRateLimit, async (req, res, next) => {
   try {
     const data = createPromptSchema.parse(req.body);
     const category = data.categorySlug

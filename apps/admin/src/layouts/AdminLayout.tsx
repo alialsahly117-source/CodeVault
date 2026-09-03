@@ -55,8 +55,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <>
-      <div className="flex h-16 items-center gap-2 border-b border-border px-5 font-mono text-base font-bold text-text">
-        <img src="/icon-192.png" alt="" className="h-8 w-8" />
+      <div className="flex h-16 items-center gap-2.5 border-b border-border px-5 text-lg font-extrabold tracking-tight text-text">
+        <img src="/icon-192.png" alt="" className="h-10 w-10" />
         CodeVault Admin
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-4">

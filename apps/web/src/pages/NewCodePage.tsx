@@ -11,6 +11,7 @@ import { LANGUAGES, FRAMEWORKS } from "@codevault/config";
 import { Input, Label, Textarea, FieldError, Select, TagsInput, Button } from "@codevault/ui";
 import { CodeViewer } from "../features/codes/CodeViewer";
 import { ApiError } from "../lib/api";
+import { useAuth } from "../features/auth/AuthContext";
 
 const schema = z.object({
   title: z.string().min(3, "العنوان قصير جدًا").max(120),
@@ -27,6 +28,7 @@ export function NewCodePage() {
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
+  const { isStaff } = useAuth();
   const [tags, setTags] = useState<string[]>([]);
   const [preview, setPreview] = useState(false);
 
@@ -83,6 +85,17 @@ export function NewCodePage() {
 
   const content = watch("content") || "";
   const language = watch("language") || "javascript";
+
+  if (!isEdit && !isStaff) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <h1 className="text-xl font-bold text-text">نشر الأكواد قريبًا</h1>
+        <p className="mt-2 text-sm text-text-secondary">
+          نشر الأكواد الخاصة بك متاح حاليًا لطاقم العمل فقط، وسيصبح متاحًا للجميع عبر اشتراك شهري قريبًا.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">

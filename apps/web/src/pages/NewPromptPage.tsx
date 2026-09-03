@@ -10,6 +10,7 @@ import { categoriesService } from "../services/categories.service";
 import { AI_MODELS } from "@codevault/config";
 import { Input, Label, Textarea, FieldError, Select, TagsInput, Button } from "@codevault/ui";
 import { ApiError } from "../lib/api";
+import { useAuth } from "../features/auth/AuthContext";
 
 const variableSchema = z.object({
   key: z.string().min(1, "مطلوب"),
@@ -32,6 +33,7 @@ export function NewPromptPage() {
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
+  const { isStaff } = useAuth();
   const [tags, setTags] = useState<string[]>([]);
 
   const categories = useQuery({ queryKey: ["categories"], queryFn: categoriesService.list });
@@ -84,6 +86,17 @@ export function NewPromptPage() {
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "تعذر حفظ البرومبت");
     }
+  }
+
+  if (!isEdit && !isStaff) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <h1 className="text-xl font-bold text-text">نشر البرومبتات قريبًا</h1>
+        <p className="mt-2 text-sm text-text-secondary">
+          نشر البرومبتات الخاصة بك متاح حاليًا لطاقم العمل فقط، وسيصبح متاحًا للجميع عبر اشتراك شهري قريبًا.
+        </p>
+      </div>
+    );
   }
 
   return (

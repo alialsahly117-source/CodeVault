@@ -9,7 +9,26 @@ export class ApiError extends Error {
 }
 
 export function createApiClient(baseUrl: string) {
-  async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  // The access token cookie is short-lived (15m); the refresh token (30d) is
+  // what actually keeps a visitor signed in. A bare 401 used to be treated as
+  // "logged out", forcing a fresh login every 15 minutes. This shares one
+  // in-flight refresh across concurrent requests so a burst of 401s doesn't
+  // fire the refresh endpoint more than once.
+  let refreshPromise: Promise<boolean> | null = null;
+
+  async function tryRefresh(): Promise<boolean> {
+    if (!refreshPromise) {
+      refreshPromise = fetch(`${baseUrl}/auth/refresh`, { method: "POST", credentials: "include" })
+        .then((r) => r.ok)
+        .catch(() => false)
+        .finally(() => {
+          refreshPromise = null;
+        });
+    }
+    return refreshPromise;
+  }
+
+  async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
     const res = await fetch(`${baseUrl}${path}`, {
       credentials: "include",
       headers: {
@@ -20,6 +39,11 @@ export function createApiClient(baseUrl: string) {
     });
 
     if (res.status === 204) return undefined as T;
+
+    if (res.status === 401 && !isRetry && path !== "/auth/refresh" && path !== "/auth/login") {
+      const refreshed = await tryRefresh();
+      if (refreshed) return request<T>(path, options, true);
+    }
 
     const isJson = res.headers.get("content-type")?.includes("application/json");
     const data = isJson ? await res.json() : undefined;

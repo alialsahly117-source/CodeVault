@@ -33,8 +33,8 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-border bg-bg/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-2 font-mono text-lg font-bold text-text">
-            <img src="/icon-192.png" alt="" className="h-8 w-8" />
+          <Link to="/" className="flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-text">
+            <img src="/icon-192.png" alt="" className="h-11 w-11" />
             CodeVault
           </Link>
           <nav className="hidden items-center gap-1 md:flex">

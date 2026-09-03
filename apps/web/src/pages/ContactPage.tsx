@@ -85,7 +85,7 @@ export function ContactPage() {
           <FieldError message={errors.message?.message} />
         </div>
 
-        <Button type="submit" size="lg" className="w-fit">
+        <Button type="submit" size="lg" className="w-full sm:w-fit sm:px-10">
           إرسال عبر البريد الإلكتروني
         </Button>
       </form>

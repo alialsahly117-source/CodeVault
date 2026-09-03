@@ -37,8 +37,8 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-4">
       <div className="w-full max-w-sm rounded-xl border border-border bg-bg-card p-6">
-        <div className="mb-6 flex items-center gap-2 font-mono text-lg font-bold text-text">
-          <img src="/icon-192.png" alt="" className="h-8 w-8" />
+        <div className="mb-6 flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-text">
+          <img src="/icon-192.png" alt="" className="h-12 w-12" />
           CodeVault Admin
         </div>
         <h1 className="text-xl font-bold text-text">تسجيل دخول المشرفين</h1>
