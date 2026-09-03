@@ -3,7 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Input, Label, FieldError, Button } from "@codevault/ui";
+import { Label, FieldError, Button } from "@codevault/ui";
+import { Input } from "../components/fields";
 import { authService } from "../services/auth.service";
 import { useAuth } from "../features/auth/AuthContext";
 import { ApiError } from "../lib/api";
@@ -37,9 +38,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-bg px-4">
       <div className="w-full max-w-sm rounded-xl border border-border bg-bg-card p-6">
         <div className="mb-6 flex items-center gap-2 font-mono text-lg font-bold text-text">
-          <span className="flex h-8 w-8 items-center justify-center rounded-md border border-accent/40 bg-accent/10 text-accent">
-            {"</>"}
-          </span>
+          <img src="/icon-192.png" alt="" className="h-8 w-8" />
           CodeVault Admin
         </div>
         <h1 className="text-xl font-bold text-text">تسجيل دخول المشرفين</h1>

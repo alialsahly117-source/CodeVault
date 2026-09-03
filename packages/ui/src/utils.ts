@@ -1,7 +1,13 @@
 import clsx, { type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
+// clsx alone just concatenates class strings — when two conflicting utilities
+// land in the list (e.g. a base "h-10" plus a caller's "h-11" override),
+// which one wins depends on Tailwind's internal stylesheet order, not on
+// where they appear in the string. twMerge resolves that deterministically:
+// the last conflicting utility always wins, which is what callers expect.
 export function cn(...inputs: ClassValue[]) {
-  return clsx(inputs);
+  return twMerge(clsx(inputs));
 }
 
 export function formatNumber(n: number): string {

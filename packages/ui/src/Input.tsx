@@ -1,12 +1,25 @@
 import { forwardRef, type InputHTMLAttributes, type TextareaHTMLAttributes } from "react";
 import { cn } from "./utils";
 
-export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
-  ({ className, ...props }, ref) => (
+type FieldSize = "md" | "lg";
+
+const fieldHeights: Record<FieldSize, string> = {
+  md: "h-10",
+  lg: "h-12",
+};
+
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  /** Visual height — "lg" is used where forms benefit from a roomier hit target (e.g. the admin dashboard). */
+  fieldSize?: FieldSize;
+}
+
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ className, fieldSize = "md", ...props }, ref) => (
     <input
       ref={ref}
       className={cn(
-        "h-10 w-full rounded-lg border border-border bg-bg-elevated px-3 text-sm text-text placeholder:text-text-muted outline-none transition-colors focus:border-accent",
+        "w-full rounded-lg border border-border bg-bg-elevated px-3 text-sm text-text placeholder:text-text-muted outline-none transition-colors focus:border-accent",
+        fieldHeights[fieldSize],
         className
       )}
       {...props}

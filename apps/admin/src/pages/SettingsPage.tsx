@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Input, Label, Button } from "@codevault/ui";
+import { Label, Button } from "@codevault/ui";
+import { Input } from "../components/fields";
 import { adminService } from "../services/admin.service";
 import { ApiError } from "../lib/api";
 

@@ -6,7 +6,10 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row">
           <div>
-            <div className="font-mono text-lg font-bold text-text">CodeVault</div>
+            <div className="flex items-center gap-2 font-mono text-lg font-bold text-text">
+              <img src="/icon-192.png" alt="" className="h-7 w-7" />
+              CodeVault
+            </div>
             <p className="mt-2 max-w-sm text-sm text-text-secondary">
               مكتبة أكواد جاهزة وبرومبتات ذكاء اصطناعي احترافية، منظمة وقابلة للبحث.
             </p>

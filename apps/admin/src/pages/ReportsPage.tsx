@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Select, Button, ConfirmDialog, EmptyState, formatDate } from "@codevault/ui";
+import { Button, ConfirmDialog, EmptyState, formatDate } from "@codevault/ui";
+import { Select } from "../components/fields";
 import { REPORT_REASONS, REPORT_STATUS_LABELS } from "@codevault/config";
 import type { ReportStatus } from "@codevault/types";
 import { adminService } from "../services/admin.service";

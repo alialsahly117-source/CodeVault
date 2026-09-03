@@ -288,7 +288,7 @@ model AdminLog {
 model Setting {
   id                String   @id @default("singleton")
   siteName          String   @default("CodeVault")
-  maintenanceMode    Boolean  @default(false)
+  maintenanceMode   Boolean  @default(false)
   allowRegistration Boolean  @default(true)
   updatedAt         DateTime @updatedAt
 

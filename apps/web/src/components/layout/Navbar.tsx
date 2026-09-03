@@ -34,9 +34,7 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-2 font-mono text-lg font-bold text-text">
-            <span className="flex h-8 w-8 items-center justify-center rounded-md border border-accent/40 bg-accent/10 text-accent">
-              {"</>"}
-            </span>
+            <img src="/icon-192.png" alt="" className="h-8 w-8" />
             CodeVault
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
