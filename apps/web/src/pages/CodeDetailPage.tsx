@@ -144,7 +144,29 @@ export function CodeDetailPage() {
         <span>{formatNumber(code.copyCount)} نسخة</span>
         <span>·</span>
         <span>{formatNumber(code.likeCount)} إعجاب</span>
+        {code.project && (
+          <>
+            <span>·</span>
+            <span>
+              جزء من مشروع{" "}
+              <Link to={`/projects/${code.project.slug}`} className="text-accent hover:underline">
+                {code.project.title}
+              </Link>
+            </span>
+          </>
+        )}
       </div>
+
+      {!!code.libraries?.length && (
+        <div className="mt-4">
+          <h3 className="mb-1.5 text-xs font-semibold text-text-muted">المكتبات المطلوبة</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {code.libraries.map((lib) => (
+              <Badge key={lib}>{lib}</Badge>
+            ))}
+          </div>
+        </div>
+      )}
 
       {code.previewImageUrl && (
         <div className="mt-6 overflow-hidden rounded-xl border border-border">

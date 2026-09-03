@@ -160,6 +160,17 @@ export function PromptDetailPage() {
         <span>{formatNumber(prompt.copyCount)} نسخة</span>
         <span>·</span>
         <span>{formatNumber(prompt.likeCount)} إعجاب</span>
+        {prompt.project && (
+          <>
+            <span>·</span>
+            <span>
+              جزء من مشروع{" "}
+              <Link to={`/projects/${prompt.project.slug}`} className="text-accent hover:underline">
+                {prompt.project.title}
+              </Link>
+            </span>
+          </>
+        )}
       </div>
 
       {prompt.previewImageUrl && (

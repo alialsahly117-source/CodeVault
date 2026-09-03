@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { codesService } from "../services/content.service";
 import { categoriesService } from "../services/categories.service";
+import { projectsService } from "../services/projects.service";
 import { LANGUAGES, FRAMEWORKS } from "@codevault/config";
 import { Input, Label, Textarea, FieldError, Select, TagsInput, Button } from "@codevault/ui";
 import { CodeViewer } from "../features/codes/CodeViewer";
@@ -19,6 +20,7 @@ const schema = z.object({
   language: z.string().min(1, "اختر لغة البرمجة"),
   framework: z.string().optional(),
   categorySlug: z.string().optional(),
+  projectId: z.string().optional(),
   previewImageUrl: z.union([z.string().url("رابط الصورة غير صحيح"), z.literal("")]).optional(),
   content: z.string().min(1, "الكود مطلوب"),
   visibility: z.enum(["PUBLIC", "PRIVATE"]),
@@ -31,9 +33,11 @@ export function NewCodePage() {
   const navigate = useNavigate();
   const { isStaff } = useAuth();
   const [tags, setTags] = useState<string[]>([]);
+  const [libraries, setLibraries] = useState<string[]>([]);
   const [preview, setPreview] = useState(false);
 
   const categories = useQuery({ queryKey: ["categories"], queryFn: categoriesService.list });
+  const projects = useQuery({ queryKey: ["projects"], queryFn: () => projectsService.list({ limit: 100 }) });
   const existing = useQuery({
     queryKey: ["code", id],
     queryFn: () => codesService.get(id as string),
@@ -60,17 +64,19 @@ export function NewCodePage() {
         language: existing.data.language,
         framework: existing.data.framework || "",
         categorySlug: existing.data.category?.slug || "",
+        projectId: existing.data.projectId || "",
         previewImageUrl: existing.data.previewImageUrl || "",
         content: existing.data.content,
         visibility: existing.data.visibility,
       });
       setTags(existing.data.tags.map((t) => t.tag.name));
+      setLibraries(existing.data.libraries || []);
     }
   }, [existing.data, reset]);
 
   async function onSubmit(values: FormValues) {
     try {
-      const payload = { ...values, tags };
+      const payload = { ...values, tags, libraries };
       if (isEdit) {
         await codesService.update(id as string, payload);
         toast.success("تم تحديث الكود");
@@ -154,8 +160,26 @@ export function NewCodePage() {
         </div>
 
         <div>
+          <Label>المشروع (اختياري)</Label>
+          <Select {...register("projectId")}>
+            <option value="">بدون مشروع</option>
+            {projects.data?.items.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
           <Label>Tags</Label>
           <TagsInput value={tags} onChange={setTags} />
+        </div>
+
+        <div>
+          <Label>المكتبات المطلوبة (اختياري)</Label>
+          <TagsInput value={libraries} onChange={setLibraries} />
+          <p className="mt-1 text-xs text-text-muted">مثال: react, express, prisma</p>
         </div>
 
         <div>

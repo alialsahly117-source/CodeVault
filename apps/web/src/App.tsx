@@ -7,6 +7,8 @@ import { useAuth } from "./features/auth/AuthContext";
 
 import { HomePage } from "./pages/HomePage";
 import { ExplorePage } from "./pages/ExplorePage";
+import { ProjectsPage } from "./pages/ProjectsPage";
+import { ProjectDetailPage } from "./pages/ProjectDetailPage";
 import { CodesPage } from "./pages/CodesPage";
 import { PromptsPage } from "./pages/PromptsPage";
 import { CodeDetailPage } from "./pages/CodeDetailPage";
@@ -51,6 +53,8 @@ export default function App() {
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projects/:slug" element={<ProjectDetailPage />} />
         <Route path="/codes" element={<CodesPage />} />
         <Route path="/codes/:id" element={<CodeDetailPage />} />
         <Route path="/prompts" element={<PromptsPage />} />

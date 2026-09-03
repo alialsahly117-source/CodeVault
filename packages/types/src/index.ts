@@ -45,6 +45,24 @@ export interface Tag {
   _count?: { codeTags: number; promptTags: number };
 }
 
+export interface Project {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  instructions?: string | null;
+  previewImageUrl?: string | null;
+  authorId: string;
+  author?: User;
+  visibility: Visibility;
+  status: ContentStatus;
+  createdAt: string;
+  updatedAt: string;
+  codes?: Code[];
+  prompts?: Prompt[];
+  _count?: { codes: number; prompts: number };
+}
+
 export interface Code {
   id: string;
   title: string;
@@ -53,8 +71,11 @@ export interface Code {
   language: string;
   framework?: string | null;
   previewImageUrl?: string | null;
+  libraries?: string[] | null;
   categoryId?: string | null;
   category?: Category | null;
+  projectId?: string | null;
+  project?: Project | null;
   authorId: string;
   author?: User;
   visibility: Visibility;
@@ -85,6 +106,8 @@ export interface Prompt {
   aiModel?: string | null;
   previewImageUrl?: string | null;
   variables?: PromptVariable[] | null;
+  projectId?: string | null;
+  project?: Project | null;
   authorId: string;
   author?: User;
   visibility: Visibility;

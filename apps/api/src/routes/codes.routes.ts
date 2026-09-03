@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, optionalAuth, requireRole } from "../middleware/auth.js";
 import { writeRateLimit, apiRateLimit } from "../middleware/rateLimit.js";
@@ -51,7 +52,12 @@ router.get("/", apiRateLimit, async (req, res, next) => {
     const [items, total] = await Promise.all([
       prisma.code.findMany({
         where,
-        include: { tags: { include: { tag: true } }, category: true, author: { select: publicUserSelect } },
+        include: {
+          tags: { include: { tag: true } },
+          category: true,
+          project: true,
+          author: { select: publicUserSelect },
+        },
         orderBy: SORTS[query.sort || "newest"] as never,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
@@ -110,12 +116,14 @@ router.post("/", requireAuth, requireRole("EDITOR", "MODERATOR", "ADMIN"), write
         language: data.language,
         framework: data.framework,
         previewImageUrl: data.previewImageUrl,
+        libraries: data.libraries?.length ? data.libraries : undefined,
+        projectId: data.projectId || undefined,
         visibility: data.visibility,
         authorId: req.user!.id,
         categoryId: category?.id,
         tags: { create: await connectTags(data.tags) },
       },
-      include: { tags: { include: { tag: true } }, category: true },
+      include: { tags: { include: { tag: true } }, category: true, project: true },
     });
 
     res.status(201).json(code);
@@ -137,22 +145,26 @@ router.patch("/:id", requireAuth, writeRateLimit, async (req, res, next) => {
       ? await prisma.category.findUnique({ where: { slug: data.categorySlug } })
       : undefined;
 
+    const updateData: Prisma.CodeUncheckedUpdateInput = {
+      ...(data.title ? { title: data.title } : {}),
+      ...(data.description ? { description: data.description } : {}),
+      ...(data.content ? { content: data.content } : {}),
+      ...(data.language ? { language: data.language } : {}),
+      ...(data.framework !== undefined ? { framework: data.framework } : {}),
+      ...(data.previewImageUrl !== undefined ? { previewImageUrl: data.previewImageUrl } : {}),
+      ...(data.libraries !== undefined
+        ? { libraries: data.libraries.length ? data.libraries : Prisma.JsonNull }
+        : {}),
+      ...(data.projectId !== undefined ? { projectId: data.projectId || null } : {}),
+      ...(data.visibility ? { visibility: data.visibility } : {}),
+      ...(category !== undefined ? { categoryId: category?.id ?? null } : {}),
+      ...(data.tags ? { tags: { deleteMany: {}, create: await connectTags(data.tags) } } : {}),
+    };
+
     const code = await prisma.code.update({
       where: { id: existing.id },
-      data: {
-        ...(data.title ? { title: data.title } : {}),
-        ...(data.description ? { description: data.description } : {}),
-        ...(data.content ? { content: data.content } : {}),
-        ...(data.language ? { language: data.language } : {}),
-        ...(data.framework !== undefined ? { framework: data.framework } : {}),
-        ...(data.previewImageUrl !== undefined ? { previewImageUrl: data.previewImageUrl } : {}),
-        ...(data.visibility ? { visibility: data.visibility } : {}),
-        ...(category !== undefined ? { categoryId: category?.id ?? null } : {}),
-        ...(data.tags
-          ? { tags: { deleteMany: {}, create: await connectTags(data.tags) } }
-          : {}),
-      },
-      include: { tags: { include: { tag: true } }, category: true },
+      data: updateData,
+      include: { tags: { include: { tag: true } }, category: true, project: true },
     });
 
     res.json(code);

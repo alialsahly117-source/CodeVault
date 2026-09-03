@@ -8,6 +8,9 @@ export interface CodeInput {
   language: string;
   framework?: string;
   categorySlug?: string;
+  projectId?: string;
+  libraries?: string[];
+  previewImageUrl?: string;
   tags?: string[];
   visibility?: "PUBLIC" | "PRIVATE";
 }
@@ -18,6 +21,8 @@ export interface PromptInput {
   content: string;
   categorySlug?: string;
   aiModel?: string;
+  projectId?: string;
+  previewImageUrl?: string;
   tags?: string[];
   variables?: { key: string; label: string; defaultValue?: string }[];
   visibility?: "PUBLIC" | "PRIVATE";

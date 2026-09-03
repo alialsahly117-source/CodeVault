@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { promptsService } from "../services/content.service";
 import { categoriesService } from "../services/categories.service";
+import { projectsService } from "../services/projects.service";
 import { AI_MODELS } from "@codevault/config";
 import { Input, Label, Textarea, FieldError, Select, TagsInput, Button } from "@codevault/ui";
 import { ApiError } from "../lib/api";
@@ -23,6 +24,7 @@ const schema = z.object({
   description: z.string().min(10, "الوصف قصير جدًا").max(500),
   aiModel: z.string().optional(),
   categorySlug: z.string().optional(),
+  projectId: z.string().optional(),
   previewImageUrl: z.union([z.string().url("رابط الصورة غير صحيح"), z.literal("")]).optional(),
   content: z.string().min(1, "نص البرومبت مطلوب"),
   variables: z.array(variableSchema),
@@ -38,6 +40,7 @@ export function NewPromptPage() {
   const [tags, setTags] = useState<string[]>([]);
 
   const categories = useQuery({ queryKey: ["categories"], queryFn: categoriesService.list });
+  const projects = useQuery({ queryKey: ["projects"], queryFn: () => projectsService.list({ limit: 100 }) });
   const existing = useQuery({
     queryKey: ["prompt", id],
     queryFn: () => promptsService.get(id as string),
@@ -64,6 +67,7 @@ export function NewPromptPage() {
         description: existing.data.description,
         aiModel: existing.data.aiModel || "",
         categorySlug: existing.data.category?.slug || "",
+        projectId: existing.data.projectId || "",
         previewImageUrl: existing.data.previewImageUrl || "",
         content: existing.data.content,
         variables: existing.data.variables || [],
@@ -141,6 +145,18 @@ export function NewPromptPage() {
               ))}
             </Select>
           </div>
+        </div>
+
+        <div>
+          <Label>المشروع (اختياري)</Label>
+          <Select {...register("projectId")}>
+            <option value="">بدون مشروع</option>
+            {projects.data?.items.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title}
+              </option>
+            ))}
+          </Select>
         </div>
 
         <div>

@@ -21,6 +21,7 @@ const groups: NavGroup[] = [
   {
     label: "المحتوى",
     items: [
+      { to: "/projects", label: "المشاريع" },
       { to: "/codes", label: "الأكواد" },
       { to: "/prompts", label: "البرومبتات" },
       { to: "/categories", label: "التصنيفات" },

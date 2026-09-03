@@ -19,6 +19,7 @@ export function Footer() {
           <div className="flex gap-10 text-sm">
             <div className="flex flex-col gap-2">
               <span className="font-medium text-text">المنصة</span>
+              <Link to="/projects" className="text-text-secondary hover:text-text">المشاريع</Link>
               <Link to="/codes" className="text-text-secondary hover:text-text">الأكواد</Link>
               <Link to="/prompts" className="text-text-secondary hover:text-text">البرومبتات</Link>
               <Link to="/explore" className="text-text-secondary hover:text-text">استكشاف</Link>

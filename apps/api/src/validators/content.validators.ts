@@ -14,6 +14,8 @@ export const createCodeSchema = z.object({
   language: z.string().min(1, "اللغة مطلوبة"),
   framework: z.string().max(60).optional(),
   categorySlug: z.string().optional(),
+  projectId: z.string().optional(),
+  libraries: z.array(z.string().min(1).max(60)).max(30).optional(),
   tags: z.array(z.string().min(1).max(30)).max(10).optional(),
   visibility: z.enum(["PUBLIC", "PRIVATE"]).default("PUBLIC"),
   previewImageUrl,
@@ -32,6 +34,7 @@ export const createPromptSchema = z.object({
   description: z.string().min(10, "الوصف قصير جدًا").max(500),
   content: z.string().min(1, "نص البرومبت مطلوب"),
   categorySlug: z.string().optional(),
+  projectId: z.string().optional(),
   aiModel: z.string().max(60).optional(),
   tags: z.array(z.string().min(1).max(30)).max(10).optional(),
   variables: z.array(variableSchema).max(20).optional(),
@@ -40,6 +43,16 @@ export const createPromptSchema = z.object({
 });
 
 export const updatePromptSchema = createPromptSchema.partial();
+
+export const createProjectSchema = z.object({
+  title: z.string().min(3, "العنوان قصير جدًا").max(120),
+  description: z.string().min(10, "الوصف قصير جدًا").max(1000),
+  instructions: z.string().max(5000).optional(),
+  visibility: z.enum(["PUBLIC", "PRIVATE"]).default("PUBLIC"),
+  previewImageUrl,
+});
+
+export const updateProjectSchema = createProjectSchema.partial();
 
 export const reportSchema = z.object({
   reason: z.enum(["SPAM", "MALICIOUS_CODE", "COPYRIGHT", "INAPPROPRIATE", "OTHER"]),

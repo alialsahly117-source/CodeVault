@@ -8,6 +8,7 @@ const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "http://localhost:3001";
 
 const links = [
   { to: "/", label: "الرئيسية" },
+  { to: "/projects", label: "المشاريع" },
   { to: "/codes", label: "الأكواد" },
   { to: "/prompts", label: "البرومبتات" },
   { to: "/explore", label: "استكشاف" },

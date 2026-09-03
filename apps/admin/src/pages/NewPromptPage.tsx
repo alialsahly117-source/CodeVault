@@ -10,6 +10,7 @@ import { Input, Select } from "../components/fields";
 import { AI_MODELS } from "@codevault/config";
 import { contentService } from "../services/content.service";
 import { adminService } from "../services/admin.service";
+import { projectsService } from "../services/projects.service";
 import { ApiError } from "../lib/api";
 
 const variableSchema = z.object({
@@ -23,6 +24,7 @@ const schema = z.object({
   description: z.string().min(10, "الوصف قصير جدًا").max(500),
   aiModel: z.string().optional(),
   categorySlug: z.string().optional(),
+  projectId: z.string().optional(),
   previewImageUrl: z.union([z.string().url("رابط الصورة غير صحيح"), z.literal("")]).optional(),
   content: z.string().min(1, "نص البرومبت مطلوب"),
   variables: z.array(variableSchema),
@@ -34,6 +36,7 @@ export function NewPromptPage() {
   const navigate = useNavigate();
   const [tags, setTags] = useState<string[]>([]);
   const categories = useQuery({ queryKey: ["admin", "categories"], queryFn: adminService.categories });
+  const projects = useQuery({ queryKey: ["admin", "projects"], queryFn: () => projectsService.list({ limit: 100 }) });
 
   const {
     register,
@@ -98,6 +101,18 @@ export function NewPromptPage() {
               ))}
             </Select>
           </div>
+        </div>
+
+        <div>
+          <Label>المشروع (اختياري)</Label>
+          <Select {...register("projectId")}>
+            <option value="">بدون مشروع</option>
+            {projects.data?.items.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title}
+              </option>
+            ))}
+          </Select>
         </div>
 
         <div>

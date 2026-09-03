@@ -6,6 +6,8 @@ import { LoginPage } from "./pages/LoginPage";
 import { AccessDeniedPage } from "./pages/AccessDeniedPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { UsersPage } from "./pages/UsersPage";
+import { ProjectsPage } from "./pages/ProjectsPage";
+import { NewProjectPage } from "./pages/NewProjectPage";
 import { CodesPage } from "./pages/CodesPage";
 import { PromptsPage } from "./pages/PromptsPage";
 import { NewCodePage } from "./pages/NewCodePage";
@@ -25,6 +27,8 @@ export default function App() {
       <Route element={<RequireStaff />}>
         <Route element={<AdminLayout />}>
           <Route index element={<DashboardPage />} />
+          <Route path="projects" element={<ProjectsPage />} />
+          <Route path="projects/new" element={<NewProjectPage />} />
           <Route path="codes" element={<CodesPage />} />
           <Route path="codes/new" element={<NewCodePage />} />
           <Route path="prompts" element={<PromptsPage />} />

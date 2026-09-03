@@ -70,6 +70,7 @@ model User {
   updatedAt    DateTime   @updatedAt
 
   profile    Profile?
+  projects   Project[]
   codes      Code[]
   prompts    Prompt[]
   likes      Like[]
@@ -117,6 +118,27 @@ model Tag {
   @@map("tags")
 }
 
+model Project {
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        @unique
+  description     String
+  instructions    String?
+  previewImageUrl String?
+  authorId        String
+  author          User          @relation(fields: [authorId], references: [id])
+  visibility      Visibility    @default(PUBLIC)
+  status          ContentStatus @default(PUBLISHED)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  codes   Code[]
+  prompts Prompt[]
+
+  @@index([createdAt])
+  @@map("projects")
+}
+
 model Code {
   id          String        @id @default(cuid())
   title       String
@@ -125,8 +147,11 @@ model Code {
   language    String
   framework   String?
   previewImageUrl String?
+  libraries   Json?
   categoryId  String?
   category    Category?     @relation(fields: [categoryId], references: [id])
+  projectId   String?
+  project     Project?      @relation(fields: [projectId], references: [id])
   authorId    String
   author      User          @relation(fields: [authorId], references: [id])
   visibility  Visibility    @default(PUBLIC)
@@ -168,6 +193,8 @@ model Prompt {
   aiModel     String?
   previewImageUrl String?
   variables   Json?
+  projectId   String?
+  project     Project?      @relation(fields: [projectId], references: [id])
   authorId    String
   author      User          @relation(fields: [authorId], references: [id])
   visibility  Visibility    @default(PUBLIC)

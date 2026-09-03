@@ -8,6 +8,7 @@ import { apiRateLimit } from "./middleware/rateLimit.js";
 
 import authRoutes from "./routes/auth.routes.js";
 import codesRoutes from "./routes/codes.routes.js";
+import projectsRoutes from "./routes/projects.routes.js";
 import promptsRoutes from "./routes/prompts.routes.js";
 import categoriesRoutes from "./routes/categories.routes.js";
 import searchRoutes from "./routes/search.routes.js";
@@ -52,6 +53,7 @@ app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/codes", codesRoutes);
+app.use("/api/projects", projectsRoutes);
 app.use("/api/prompts", promptsRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/search", apiRateLimit, searchRoutes);
