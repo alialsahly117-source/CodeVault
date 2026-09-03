@@ -73,7 +73,7 @@ router.get("/:id", optionalAuth, async (req, res, next) => {
   try {
     const prompt = await prisma.prompt.findUnique({
       where: { id: req.params.id },
-      include: { tags: { include: { tag: true } }, category: true, author: { select: publicUserSelect } },
+      include: { tags: { include: { tag: true } }, category: true, project: true, author: { select: publicUserSelect } },
     });
     if (!prompt || prompt.status !== "PUBLISHED") throw new AppError("البرومبت غير موجود.", 404);
     if (prompt.visibility === "PRIVATE" && prompt.authorId !== req.user?.id && req.user?.role !== "ADMIN") {

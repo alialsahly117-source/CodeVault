@@ -75,7 +75,7 @@ router.get("/:id", optionalAuth, async (req, res, next) => {
   try {
     const code = await prisma.code.findUnique({
       where: { id: req.params.id },
-      include: { tags: { include: { tag: true } }, category: true, author: { select: publicUserSelect } },
+      include: { tags: { include: { tag: true } }, category: true, project: true, author: { select: publicUserSelect } },
     });
     if (!code || code.status !== "PUBLISHED") throw new AppError("الكود غير موجود.", 404);
     if (code.visibility === "PRIVATE" && code.authorId !== req.user?.id && req.user?.role !== "ADMIN") {
