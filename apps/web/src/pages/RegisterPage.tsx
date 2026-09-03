@@ -67,7 +67,7 @@ export function RegisterPage() {
         <div className="h-px flex-1 bg-border" />
       </div>
 
-      <a href="/api/auth/google">
+      <a href={`${import.meta.env.VITE_API_URL || "/api"}/auth/google`}>
         <Button variant="secondary" size="lg" className="w-full" type="button">
           المتابعة عبر Google
         </Button>
