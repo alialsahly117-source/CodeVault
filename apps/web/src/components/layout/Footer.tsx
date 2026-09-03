@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../../features/auth/AuthContext";
 
 export function Footer() {
+  const { isAuthenticated } = useAuth();
   return (
     <footer className="border-t border-border bg-bg">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -21,11 +23,13 @@ export function Footer() {
               <Link to="/prompts" className="text-text-secondary hover:text-text">البرومبتات</Link>
               <Link to="/explore" className="text-text-secondary hover:text-text">استكشاف</Link>
             </div>
-            <div className="flex flex-col gap-2">
-              <span className="font-medium text-text">الحساب</span>
-              <Link to="/login" className="text-text-secondary hover:text-text">تسجيل الدخول</Link>
-              <Link to="/register" className="text-text-secondary hover:text-text">إنشاء حساب</Link>
-            </div>
+            {!isAuthenticated && (
+              <div className="flex flex-col gap-2">
+                <span className="font-medium text-text">الحساب</span>
+                <Link to="/login" className="text-text-secondary hover:text-text">تسجيل الدخول</Link>
+                <Link to="/register" className="text-text-secondary hover:text-text">إنشاء حساب</Link>
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               <span className="font-medium text-text">تواصل معنا</span>
               <Link to="/contact" className="text-text-secondary hover:text-text">نموذج التواصل</Link>
