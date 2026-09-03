@@ -14,9 +14,9 @@ services:
       - key: PORT
         value: "4000"
       - key: WEB_URL
-        value: https://codevault-web.netlify.app
+        value: https://codevault.vip
       - key: ADMIN_URL
-        value: https://codevault-admin.netlify.app
+        value: https://admin.codevault.vip
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
@@ -27,11 +27,14 @@ services:
         value: 30d
       - key: COOKIE_SECURE
         value: "true"
-      # web/admin (*.netlify.app) and this API (*.onrender.com) are unrelated
-      # domains, so the auth cookie needs SameSite=None to survive the
-      # cross-site fetch — see apps/api/src/lib/cookies.ts.
+      # web/admin/api now share codevault.vip as a real parent domain, so
+      # with COOKIE_DOMAIN=".codevault.vip" below, requests between them are
+      # same-site — SameSite=Lax works and is safer than None (extra CSRF
+      # defense on top of the Origin check in app.ts). See lib/cookies.ts.
       - key: COOKIE_SAMESITE
-        value: "none"
+        value: "lax"
+      - key: COOKIE_DOMAIN
+        value: ".codevault.vip"
       - key: SMTP_USER
         value: alialsahly.ai@gmail.com
       - key: SMTP_PASS
@@ -42,9 +45,8 @@ services:
         value: ""
       - key: GOOGLE_CLIENT_SECRET
         value: ""
-      # Update this if the service's onrender.com hostname ever changes.
       - key: GOOGLE_CALLBACK_URL
-        value: https://codevault-api-9mo5.onrender.com/api/auth/google/callback
+        value: https://api.codevault.vip/api/auth/google/callback
 
 databases:
   - name: codevault-db
