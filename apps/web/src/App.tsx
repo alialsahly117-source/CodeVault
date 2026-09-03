@@ -18,6 +18,7 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { ContactPage } from "./pages/ContactPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 
 function MaintenanceNotice() {
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="/codes/:id" element={<CodeDetailPage />} />
         <Route path="/prompts" element={<PromptsPage />} />
         <Route path="/prompts/:id" element={<PromptDetailPage />} />
+        <Route path="/contact" element={<ContactPage />} />
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

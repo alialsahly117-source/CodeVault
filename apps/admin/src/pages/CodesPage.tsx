@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Button, ConfirmDialog, Pagination, EmptyState, Input, Select, formatDate } from "@codevault/ui";
@@ -50,7 +50,12 @@ export function CodesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-text">إدارة الأكواد</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-text">إدارة الأكواد</h1>
+        <Link to="/codes/new">
+          <Button size="sm">+ إضافة كود</Button>
+        </Link>
+      </div>
 
       <div className="mt-4 flex flex-wrap gap-3">
         <Input

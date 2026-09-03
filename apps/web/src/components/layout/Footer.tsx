@@ -23,6 +23,13 @@ export function Footer() {
               <Link to="/login" className="text-text-secondary hover:text-text">تسجيل الدخول</Link>
               <Link to="/register" className="text-text-secondary hover:text-text">إنشاء حساب</Link>
             </div>
+            <div className="flex flex-col gap-2">
+              <span className="font-medium text-text">تواصل معنا</span>
+              <Link to="/contact" className="text-text-secondary hover:text-text">نموذج التواصل</Link>
+              <a href="mailto:alialsahly.ai@gmail.com" dir="ltr" className="text-text-secondary hover:text-text">
+                alialsahly.ai@gmail.com
+              </a>
+            </div>
           </div>
         </div>
         <div className="mt-8 border-t border-border pt-6 text-xs text-text-muted">

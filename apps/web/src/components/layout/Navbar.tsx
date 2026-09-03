@@ -12,6 +12,7 @@ const links = [
   { to: "/codes", label: "الأكواد" },
   { to: "/prompts", label: "البرومبتات" },
   { to: "/explore", label: "استكشاف" },
+  { to: "/contact", label: "تواصل معنا" },
 ];
 
 export function Navbar() {

@@ -8,6 +8,8 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { UsersPage } from "./pages/UsersPage";
 import { CodesPage } from "./pages/CodesPage";
 import { PromptsPage } from "./pages/PromptsPage";
+import { NewCodePage } from "./pages/NewCodePage";
+import { NewPromptPage } from "./pages/NewPromptPage";
 import { CategoriesPage } from "./pages/CategoriesPage";
 import { TagsPage } from "./pages/TagsPage";
 import { ReportsPage } from "./pages/ReportsPage";
@@ -24,7 +26,9 @@ export default function App() {
         <Route element={<AdminLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="codes" element={<CodesPage />} />
+          <Route path="codes/new" element={<NewCodePage />} />
           <Route path="prompts" element={<PromptsPage />} />
+          <Route path="prompts/new" element={<NewPromptPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="tags" element={<TagsPage />} />
 
