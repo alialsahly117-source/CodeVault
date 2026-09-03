@@ -7,11 +7,13 @@ import "./index.css";
 import App from "./App.tsx";
 import { queryClient } from "./lib/queryClient";
 import { AuthProvider } from "./features/auth/AuthContext";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ErrorBoundary>
         <AuthProvider>
           <App />
           <Toaster
@@ -26,6 +28,7 @@ createRoot(document.getElementById("root")!).render(
             }}
           />
         </AuthProvider>
+        </ErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>
