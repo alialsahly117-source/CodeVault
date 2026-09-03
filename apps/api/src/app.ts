@@ -24,10 +24,12 @@ const allowedOrigins = [process.env.WEB_URL, process.env.ADMIN_URL, process.env.
   (v): v is string => !!v
 );
 
-// The app is never reached directly from the internet — Render's edge is
-// always the first hop — so trusting the whole X-Forwarded-For chain is safe
-// and required for correct client IPs (rate limiting, admin log IPs).
-app.set("trust proxy", true);
+// In production the app is never reached directly from the internet —
+// Render's edge is always the first hop — so trusting the whole
+// X-Forwarded-For chain is safe and required for correct client IPs (rate
+// limiting, admin log IPs). Locally there is no trusted proxy in front, so
+// trusting XFF there would let anyone spoof their IP and bypass rate limits.
+app.set("trust proxy", process.env.NODE_ENV === "production");
 // None of our query params are nested/array-shaped, so the "simple" parser
 // (Node's built-in querystring) covers every real use — and it sidesteps the
 // unpatched qs DoS/bypass advisories that ship inside body-parser/express@4.
