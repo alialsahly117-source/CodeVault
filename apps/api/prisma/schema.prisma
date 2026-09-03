@@ -124,6 +124,7 @@ model Code {
   content     String
   language    String
   framework   String?
+  previewImageUrl String?
   categoryId  String?
   category    Category?     @relation(fields: [categoryId], references: [id])
   authorId    String
@@ -165,6 +166,7 @@ model Prompt {
   categoryId  String?
   category    Category?     @relation(fields: [categoryId], references: [id])
   aiModel     String?
+  previewImageUrl String?
   variables   Json?
   authorId    String
   author      User          @relation(fields: [authorId], references: [id])

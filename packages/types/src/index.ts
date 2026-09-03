@@ -52,6 +52,7 @@ export interface Code {
   content: string;
   language: string;
   framework?: string | null;
+  previewImageUrl?: string | null;
   categoryId?: string | null;
   category?: Category | null;
   authorId: string;
@@ -82,6 +83,7 @@ export interface Prompt {
   categoryId?: string | null;
   category?: Category | null;
   aiModel?: string | null;
+  previewImageUrl?: string | null;
   variables?: PromptVariable[] | null;
   authorId: string;
   author?: User;

@@ -162,6 +162,12 @@ export function PromptDetailPage() {
         <span>{formatNumber(prompt.likeCount)} إعجاب</span>
       </div>
 
+      {prompt.previewImageUrl && (
+        <div className="mt-6 overflow-hidden rounded-xl border border-border">
+          <img src={prompt.previewImageUrl} alt={prompt.title} className="max-h-[480px] w-full object-cover" />
+        </div>
+      )}
+
       {!!prompt.variables?.length && (
         <div className="mt-6 rounded-xl border border-border bg-bg-card p-4">
           <h3 className="mb-3 text-sm font-semibold text-text">متغيرات البرومبت</h3>

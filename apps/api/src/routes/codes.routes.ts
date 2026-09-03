@@ -109,6 +109,7 @@ router.post("/", requireAuth, requireRole("EDITOR", "MODERATOR", "ADMIN"), write
         content: data.content,
         language: data.language,
         framework: data.framework,
+        previewImageUrl: data.previewImageUrl,
         visibility: data.visibility,
         authorId: req.user!.id,
         categoryId: category?.id,
@@ -144,6 +145,7 @@ router.patch("/:id", requireAuth, writeRateLimit, async (req, res, next) => {
         ...(data.content ? { content: data.content } : {}),
         ...(data.language ? { language: data.language } : {}),
         ...(data.framework !== undefined ? { framework: data.framework } : {}),
+        ...(data.previewImageUrl !== undefined ? { previewImageUrl: data.previewImageUrl } : {}),
         ...(data.visibility ? { visibility: data.visibility } : {}),
         ...(category !== undefined ? { categoryId: category?.id ?? null } : {}),
         ...(data.tags

@@ -18,6 +18,7 @@ const schema = z.object({
   language: z.string().min(1, "اختر لغة البرمجة"),
   framework: z.string().optional(),
   categorySlug: z.string().optional(),
+  previewImageUrl: z.union([z.string().url("رابط الصورة غير صحيح"), z.literal("")]).optional(),
   content: z.string().min(1, "الكود مطلوب"),
   visibility: z.enum(["PUBLIC", "PRIVATE"]),
 });
@@ -103,6 +104,12 @@ export function NewCodePage() {
         <div>
           <Label>Tags</Label>
           <TagsInput value={tags} onChange={setTags} />
+        </div>
+
+        <div>
+          <Label>رابط صورة توضيحية (اختياري)</Label>
+          <Input placeholder="https://example.com/preview.png" dir="ltr" {...register("previewImageUrl")} />
+          <FieldError message={errors.previewImageUrl?.message} />
         </div>
 
         <div>

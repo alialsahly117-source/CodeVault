@@ -23,6 +23,7 @@ const schema = z.object({
   description: z.string().min(10, "الوصف قصير جدًا").max(500),
   aiModel: z.string().optional(),
   categorySlug: z.string().optional(),
+  previewImageUrl: z.union([z.string().url("رابط الصورة غير صحيح"), z.literal("")]).optional(),
   content: z.string().min(1, "نص البرومبت مطلوب"),
   variables: z.array(variableSchema),
   visibility: z.enum(["PUBLIC", "PRIVATE"]),
@@ -63,6 +64,7 @@ export function NewPromptPage() {
         description: existing.data.description,
         aiModel: existing.data.aiModel || "",
         categorySlug: existing.data.category?.slug || "",
+        previewImageUrl: existing.data.previewImageUrl || "",
         content: existing.data.content,
         variables: existing.data.variables || [],
         visibility: existing.data.visibility,
@@ -144,6 +146,19 @@ export function NewPromptPage() {
         <div>
           <Label>Tags</Label>
           <TagsInput value={tags} onChange={setTags} />
+        </div>
+
+        <div>
+          <Label>رابط صورة توضيحية (اختياري)</Label>
+          <Input
+            placeholder="https://example.com/preview.png"
+            dir="ltr"
+            {...register("previewImageUrl")}
+          />
+          <FieldError message={errors.previewImageUrl?.message} />
+          <p className="mt-1 text-xs text-text-muted">
+            صورة تُظهر ما يُنتجه هذا البرومبت، تُعرض في صفحته.
+          </p>
         </div>
 
         <div>

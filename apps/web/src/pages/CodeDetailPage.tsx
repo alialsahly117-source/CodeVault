@@ -146,6 +146,12 @@ export function CodeDetailPage() {
         <span>{formatNumber(code.likeCount)} إعجاب</span>
       </div>
 
+      {code.previewImageUrl && (
+        <div className="mt-6 overflow-hidden rounded-xl border border-border">
+          <img src={code.previewImageUrl} alt={code.title} className="max-h-[480px] w-full object-cover" />
+        </div>
+      )}
+
       <div className="mt-6">
         <CodeViewer code={code.content} language={code.language} />
       </div>

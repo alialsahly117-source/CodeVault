@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+const previewImageUrl = z
+  .string()
+  .trim()
+  .refine((v) => v === "" || z.string().url().safeParse(v).success, "رابط الصورة غير صحيح")
+  .transform((v) => (v === "" ? undefined : v))
+  .optional();
+
 export const createCodeSchema = z.object({
   title: z.string().min(3, "العنوان قصير جدًا").max(120),
   description: z.string().min(10, "الوصف قصير جدًا").max(500),
@@ -9,6 +16,7 @@ export const createCodeSchema = z.object({
   categorySlug: z.string().optional(),
   tags: z.array(z.string().min(1).max(30)).max(10).optional(),
   visibility: z.enum(["PUBLIC", "PRIVATE"]).default("PUBLIC"),
+  previewImageUrl,
 });
 
 export const updateCodeSchema = createCodeSchema.partial();
@@ -28,6 +36,7 @@ export const createPromptSchema = z.object({
   tags: z.array(z.string().min(1).max(30)).max(10).optional(),
   variables: z.array(variableSchema).max(20).optional(),
   visibility: z.enum(["PUBLIC", "PRIVATE"]).default("PUBLIC"),
+  previewImageUrl,
 });
 
 export const updatePromptSchema = createPromptSchema.partial();
