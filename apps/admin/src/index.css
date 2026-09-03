@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @import "@codevault/config/theme.css";
 
+/* Tailwind's automatic content scan only walks down from this file's own
+   package, so classes used exclusively inside the shared @codevault/ui
+   components (e.g. Button's h-12/px-6 size variants) were silently missing
+   from the compiled CSS unless the same literal class string happened to
+   also appear somewhere in apps/admin itself. */
+@source "../../../packages/ui/src";
+
 /* Admin gets its own accent (violet) to stay visually distinct from the public site. */
 @theme {
   --color-accent: #8b5cf6;
