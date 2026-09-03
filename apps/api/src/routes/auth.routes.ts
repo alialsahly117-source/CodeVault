@@ -5,6 +5,7 @@ import passport from "../config/passport.js";
 import { prisma } from "../lib/prisma.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt.js";
 import { setAuthCookies, clearAuthCookies } from "../lib/cookies.js";
+import { sendPasswordResetEmail } from "../lib/email.js";
 import { requireAuth } from "../middleware/auth.js";
 import { authRateLimit } from "../middleware/rateLimit.js";
 import { AppError } from "../middleware/errorHandler.js";
@@ -17,6 +18,7 @@ import {
 } from "../validators/auth.validators.js";
 
 const router = Router();
+const webUrl = process.env.WEB_URL || process.env.CLIENT_URL || "http://localhost:5173";
 
 router.post("/register", authRateLimit, async (req, res, next) => {
   try {
@@ -119,9 +121,11 @@ router.post("/forgot-password", authRateLimit, async (req, res, next) => {
           expiresAt: new Date(Date.now() + 60 * 60 * 1000),
         },
       });
-      // TODO: integrate a real email provider. For now log the reset link for local dev.
-      // eslint-disable-next-line no-console
-      console.log(`رابط إعادة تعيين كلمة المرور لـ ${email}: /reset-password?token=${rawToken}`);
+      const resetUrl = `${webUrl}/reset-password?token=${rawToken}`;
+      sendPasswordResetEmail(email, resetUrl).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error("تعذر إرسال بريد إعادة تعيين كلمة المرور:", err);
+      });
     }
 
     res.json({ message: "إذا كان البريد الإلكتروني مسجلاً، ستصلك رسالة لإعادة تعيين كلمة المرور." });
@@ -193,8 +197,6 @@ router.patch("/me", requireAuth, async (req, res, next) => {
 });
 
 // Google OAuth — public-site login only; the admin dashboard never exposes this.
-const webUrl = process.env.WEB_URL || process.env.CLIENT_URL || "http://localhost:5173";
-
 function requireGoogleConfigured(_req: Request, res: Response, next: NextFunction) {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     return res.redirect(`${webUrl}/login?error=google_not_configured`);

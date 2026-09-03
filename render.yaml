@@ -32,6 +32,12 @@ services:
       # cross-site fetch — see apps/api/src/lib/cookies.ts.
       - key: COOKIE_SAMESITE
         value: "none"
+      - key: SMTP_USER
+        value: alialsahly.ai@gmail.com
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM_NAME
+        value: "CodeVault"
       - key: GOOGLE_CLIENT_ID
         value: ""
       - key: GOOGLE_CLIENT_SECRET
