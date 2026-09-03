@@ -17,6 +17,7 @@ import {
   formatNumber,
 } from "@codevault/ui";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { downloadPromptFile } from "../lib/download";
 
 export function PromptDetailPage() {
   const { id = "" } = useParams();
@@ -69,6 +70,11 @@ export function PromptDetailPage() {
     await navigator.clipboard.writeText(rendered);
     toast.success("تم نسخ البرومبت!");
     promptsService.copy(id).catch(() => {});
+  }
+
+  function handleDownload() {
+    if (!prompt) return;
+    downloadPromptFile(prompt.title, rendered);
   }
 
   async function handleShare() {
@@ -180,6 +186,9 @@ export function PromptDetailPage() {
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Button onClick={handleCopy}>نسخ البرومبت</Button>
+        <Button variant="secondary" onClick={handleDownload}>
+          تحميل كملف
+        </Button>
         <Button
           variant={prompt.liked ? "primary" : "secondary"}
           onClick={() => requireAuth(() => likeMutation.mutate())}

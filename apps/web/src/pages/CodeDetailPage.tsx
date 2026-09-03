@@ -8,6 +8,7 @@ import { CodeViewer } from "../features/codes/CodeViewer";
 import { ReportDialog } from "../features/reports/ReportDialog";
 import { ConfirmDialog, Badge, Button, ErrorState, Skeleton, formatDate, formatNumber } from "@codevault/ui";
 import { usePageMeta } from "../hooks/usePageMeta";
+import { downloadCodeFile } from "../lib/download";
 
 export function CodeDetailPage() {
   const { id = "" } = useParams();
@@ -50,6 +51,11 @@ export function CodeDetailPage() {
     await navigator.clipboard.writeText(code.content);
     toast.success("تم نسخ الكود!");
     codesService.copy(id).catch(() => {});
+  }
+
+  function handleDownload() {
+    if (!code) return;
+    downloadCodeFile(code.title, code.language, code.content);
   }
 
   async function handleShare() {
@@ -146,6 +152,9 @@ export function CodeDetailPage() {
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Button onClick={handleCopy}>نسخ الكود</Button>
+        <Button variant="secondary" onClick={handleDownload}>
+          تحميل كملف
+        </Button>
         <Button
           variant={code.liked ? "primary" : "secondary"}
           onClick={() => requireAuth(() => likeMutation.mutate())}
