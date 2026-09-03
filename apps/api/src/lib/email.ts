@@ -10,8 +10,14 @@ const fromName = process.env.SMTP_FROM_NAME || "CodeVault";
 const transporter =
   smtpUser && smtpPass
     ? nodemailer.createTransport({
-        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: { user: smtpUser, pass: smtpPass },
+        // Render's containers can resolve Gmail's SMTP AAAA (IPv6) record
+        // but have no outbound IPv6 route, so the connection just hangs
+        // then fails with ENETUNREACH. Force IPv4, which always works.
+        family: 4,
       })
     : null;
 
