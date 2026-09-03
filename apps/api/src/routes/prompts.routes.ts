@@ -5,6 +5,7 @@ import { writeRateLimit, apiRateLimit } from "../middleware/rateLimit.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { createPromptSchema, updatePromptSchema, listQuerySchema, reportSchema } from "../validators/content.validators.js";
 import { slugify } from "../lib/slug.js";
+import { publicUserSelect } from "../lib/selects.js";
 
 const router = Router();
 
@@ -48,7 +49,7 @@ router.get("/", apiRateLimit, async (req, res, next) => {
     const [items, total] = await Promise.all([
       prisma.prompt.findMany({
         where,
-        include: { tags: { include: { tag: true } }, category: true, author: { include: { profile: true } } },
+        include: { tags: { include: { tag: true } }, category: true, author: { select: publicUserSelect } },
         orderBy: SORTS[query.sort || "newest"] as never,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
@@ -66,7 +67,7 @@ router.get("/:id", optionalAuth, async (req, res, next) => {
   try {
     const prompt = await prisma.prompt.findUnique({
       where: { id: req.params.id },
-      include: { tags: { include: { tag: true } }, category: true, author: { include: { profile: true } } },
+      include: { tags: { include: { tag: true } }, category: true, author: { select: publicUserSelect } },
     });
     if (!prompt || prompt.status !== "PUBLISHED") throw new AppError("البرومبت غير موجود.", 404);
     if (prompt.visibility === "PRIVATE" && prompt.authorId !== req.user?.id && req.user?.role !== "ADMIN") {

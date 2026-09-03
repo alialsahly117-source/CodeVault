@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma.js";
 import { requireEditor, requireModerator } from "../../middleware/rbac.js";
 import { moderateContentSchema } from "../../validators/admin.validators.js";
 import { logAction } from "./_logAction.js";
+import { publicUserSelect } from "../../lib/selects.js";
 
 const router = Router();
 
@@ -19,7 +20,7 @@ router.get("/codes", requireEditor, async (req, res, next) => {
     const [items, total] = await Promise.all([
       prisma.code.findMany({
         where,
-        include: { author: { include: { profile: true } }, category: true },
+        include: { author: { select: publicUserSelect }, category: true },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,
@@ -66,7 +67,7 @@ router.get("/prompts", requireEditor, async (req, res, next) => {
     const [items, total] = await Promise.all([
       prisma.prompt.findMany({
         where,
-        include: { author: { include: { profile: true } }, category: true },
+        include: { author: { select: publicUserSelect }, category: true },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,

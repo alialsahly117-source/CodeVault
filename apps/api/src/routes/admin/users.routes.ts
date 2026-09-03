@@ -4,6 +4,7 @@ import { requireAdmin, requireModerator } from "../../middleware/rbac.js";
 import { AppError } from "../../middleware/errorHandler.js";
 import { changeRoleSchema, banUserSchema } from "../../validators/admin.validators.js";
 import { logAction } from "./_logAction.js";
+import { adminUserListSelect } from "../../lib/selects.js";
 
 const router = Router();
 
@@ -23,7 +24,7 @@ router.get("/", requireAdmin, async (req, res, next) => {
     const [items, total] = await Promise.all([
       prisma.user.findMany({
         where,
-        include: { profile: true },
+        select: adminUserListSelect,
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,
@@ -40,7 +41,11 @@ router.patch("/:id/role", requireAdmin, async (req, res, next) => {
   try {
     if (req.params.id === req.user!.id) throw new AppError("لا يمكنك تغيير صلاحيتك الخاصة.", 400);
     const { role } = changeRoleSchema.parse(req.body);
-    const user = await prisma.user.update({ where: { id: req.params.id }, data: { role } });
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { role },
+      select: adminUserListSelect,
+    });
     await logAction(req, "change_role", "user", user.id, { role });
     res.json(user);
   } catch (err) {
@@ -58,7 +63,11 @@ router.patch("/:id/status", requireModerator, async (req, res, next) => {
       throw new AppError("لا يمكن لمشرف المراجعة تعديل حالة مشرف آخر.", 403);
     }
     const { status } = banUserSchema.parse(req.body);
-    const user = await prisma.user.update({ where: { id: req.params.id }, data: { status } });
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { status },
+      select: adminUserListSelect,
+    });
     await logAction(req, "change_status", "user", user.id, { status });
     res.json(user);
   } catch (err) {

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../../lib/prisma.js";
 import { requireEditor } from "../../middleware/rbac.js";
+import { publicUserSelect } from "../../lib/selects.js";
 
 const router = Router();
 
@@ -35,17 +36,17 @@ router.get("/activity", requireEditor, async (_req, res, next) => {
       prisma.code.findMany({
         take: 10,
         orderBy: { createdAt: "desc" },
-        include: { author: { include: { profile: true } } },
+        include: { author: { select: publicUserSelect } },
       }),
       prisma.prompt.findMany({
         take: 10,
         orderBy: { createdAt: "desc" },
-        include: { author: { include: { profile: true } } },
+        include: { author: { select: publicUserSelect } },
       }),
       prisma.adminLog.findMany({
         take: 15,
         orderBy: { createdAt: "desc" },
-        include: { admin: { include: { profile: true } } },
+        include: { admin: { select: publicUserSelect } },
       }),
     ]);
 

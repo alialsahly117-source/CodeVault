@@ -4,6 +4,7 @@ import { requireModerator } from "../../middleware/rbac.js";
 import { AppError } from "../../middleware/errorHandler.js";
 import { reportStatusSchema } from "../../validators/admin.validators.js";
 import { logAction } from "./_logAction.js";
+import { publicUserSelect } from "../../lib/selects.js";
 
 const router = Router();
 
@@ -12,7 +13,7 @@ router.get("/", requireModerator, async (req, res, next) => {
     const status = req.query.status as string | undefined;
     const reports = await prisma.report.findMany({
       where: status ? { status: status as never } : {},
-      include: { reporter: { include: { profile: true } }, code: true, prompt: true },
+      include: { reporter: { select: publicUserSelect }, code: true, prompt: true },
       orderBy: { createdAt: "desc" },
     });
     res.json(reports);

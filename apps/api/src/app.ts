@@ -3,7 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import passport from "./config/passport.js";
-import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { AppError, errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { apiRateLimit } from "./middleware/rateLimit.js";
 
 import authRoutes from "./routes/auth.routes.js";
@@ -24,13 +24,20 @@ const allowedOrigins = [process.env.WEB_URL, process.env.ADMIN_URL, process.env.
   (v): v is string => !!v
 );
 
-app.set("trust proxy", 1);
+// The app is never reached directly from the internet — Render's edge is
+// always the first hop — so trusting the whole X-Forwarded-For chain is safe
+// and required for correct client IPs (rate limiting, admin log IPs).
+app.set("trust proxy", true);
+// None of our query params are nested/array-shaped, so the "simple" parser
+// (Node's built-in querystring) covers every real use — and it sidesteps the
+// unpatched qs DoS/bypass advisories that ship inside body-parser/express@4.
+app.set("query parser", "simple");
 app.use(helmet());
 app.use(
   cors({
     origin(origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error("Not allowed by CORS"));
+      callback(new AppError("غير مسموح بالوصول من هذا المصدر.", 403));
     },
     credentials: true,
   })

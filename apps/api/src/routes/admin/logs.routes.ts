@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../../lib/prisma.js";
 import { requireAdmin } from "../../middleware/rbac.js";
+import { publicUserSelect } from "../../lib/selects.js";
 
 const router = Router();
 
@@ -10,7 +11,7 @@ router.get("/", requireAdmin, async (req, res, next) => {
     const limit = Math.min(100, Number(req.query.limit) || 50);
     const [items, total] = await Promise.all([
       prisma.adminLog.findMany({
-        include: { admin: { include: { profile: true } } },
+        include: { admin: { select: publicUserSelect } },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,

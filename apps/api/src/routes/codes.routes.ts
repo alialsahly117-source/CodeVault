@@ -5,6 +5,7 @@ import { writeRateLimit, apiRateLimit } from "../middleware/rateLimit.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { createCodeSchema, updateCodeSchema, listQuerySchema, reportSchema } from "../validators/content.validators.js";
 import { slugify } from "../lib/slug.js";
+import { publicUserSelect } from "../lib/selects.js";
 
 const router = Router();
 
@@ -50,7 +51,7 @@ router.get("/", apiRateLimit, async (req, res, next) => {
     const [items, total] = await Promise.all([
       prisma.code.findMany({
         where,
-        include: { tags: { include: { tag: true } }, category: true, author: { include: { profile: true } } },
+        include: { tags: { include: { tag: true } }, category: true, author: { select: publicUserSelect } },
         orderBy: SORTS[query.sort || "newest"] as never,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
@@ -68,7 +69,7 @@ router.get("/:id", optionalAuth, async (req, res, next) => {
   try {
     const code = await prisma.code.findUnique({
       where: { id: req.params.id },
-      include: { tags: { include: { tag: true } }, category: true, author: { include: { profile: true } } },
+      include: { tags: { include: { tag: true } }, category: true, author: { select: publicUserSelect } },
     });
     if (!code || code.status !== "PUBLISHED") throw new AppError("الكود غير موجود.", 404);
     if (code.visibility === "PRIVATE" && code.authorId !== req.user?.id && req.user?.role !== "ADMIN") {
