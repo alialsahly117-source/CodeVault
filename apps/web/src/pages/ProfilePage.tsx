@@ -10,7 +10,7 @@ import { PromptCard } from "../features/prompts/PromptCard";
 import { EmptyState, CardSkeleton, Input, Label, Textarea, Button, formatDate } from "@codevault/ui";
 import type { Code, Prompt } from "@codevault/types";
 
-type Tab = "saved" | "liked" | "contributions" | "settings";
+type Tab = "saved" | "liked" | "settings";
 
 export function ProfilePage() {
   const { user, refetch } = useAuth();
@@ -19,11 +19,6 @@ export function ProfilePage() {
 
   const saved = useQuery({ queryKey: ["me", "saved"], queryFn: usersService.saved, enabled: tab === "saved" });
   const liked = useQuery({ queryKey: ["me", "liked"], queryFn: usersService.liked, enabled: tab === "liked" });
-  const contributions = useQuery({
-    queryKey: ["me", "contributions"],
-    queryFn: usersService.contributions,
-    enabled: tab === "contributions",
-  });
 
   const { register, handleSubmit } = useForm({
     defaultValues: { displayName: user?.profile?.displayName || "", bio: user?.profile?.bio || "" },
@@ -43,7 +38,6 @@ export function ProfilePage() {
   const tabs: { value: Tab; label: string }[] = [
     { value: "saved", label: "المحفوظات" },
     { value: "liked", label: "الإعجابات" },
-    { value: "contributions", label: "مساهماتي" },
     { value: "settings", label: "الإعدادات" },
   ];
 
@@ -84,42 +78,6 @@ export function ProfilePage() {
         )}
         {tab === "liked" && (
           <ItemGrid isLoading={liked.isLoading} items={liked.data} emptyTitle="لم تُعجب بأي عنصر بعد" />
-        )}
-        {tab === "contributions" && (
-          <div>
-            {contributions.isLoading && (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <CardSkeleton key={i} />
-                ))}
-              </div>
-            )}
-            {!contributions.isLoading &&
-              !contributions.data?.codes.length &&
-              !contributions.data?.prompts.length && (
-                <EmptyState title="لم تُضِف أي محتوى بعد" description="ابدأ بمشاركة أول كود أو برومبت لك." />
-              )}
-            {!!contributions.data?.codes.length && (
-              <div className="mb-8">
-                <h3 className="mb-3 text-sm font-semibold text-text">الأكواد</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {contributions.data.codes.map((c) => (
-                    <CodeCard key={c.id} code={c} />
-                  ))}
-                </div>
-              </div>
-            )}
-            {!!contributions.data?.prompts.length && (
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-text">البرومبتات</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {contributions.data.prompts.map((p) => (
-                    <PromptCard key={p.id} prompt={p} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
         )}
         {tab === "settings" && (
           <form
