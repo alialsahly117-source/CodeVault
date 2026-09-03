@@ -32,6 +32,10 @@ body {
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  /* Inter's regular weight reads as noticeably thin on Arabic glyphs at UI
+     sizes, so the whole app defaults one notch heavier than the browser's
+     usual 400 — headings already override this with their own weights. */
+  font-weight: 500;
 }
 
 code,

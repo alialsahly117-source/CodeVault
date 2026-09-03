@@ -43,11 +43,11 @@ export function SearchBar({ large }: { large?: boolean }) {
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => setFocused(true)}
           placeholder="ابحث عن كود أو Prompt..."
-          className={`w-full rounded-xl border border-border bg-bg-elevated px-4 text-text placeholder:text-text-muted outline-none focus:border-accent ${
+          className={`min-w-0 flex-1 rounded-xl border border-border bg-bg-elevated px-4 text-text placeholder:text-text-muted outline-none focus:border-accent ${
             large ? "h-14 text-base" : "h-11 text-sm"
           }`}
         />
-        <Button type="submit" size={large ? "lg" : "md"}>
+        <Button type="submit" size={large ? "lg" : "md"} className="shrink-0">
           بحث
         </Button>
       </form>
