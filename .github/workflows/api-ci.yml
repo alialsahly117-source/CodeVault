@@ -56,6 +56,10 @@ jobs:
       # docker-build job below is for.
       - run: npm install
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        working-directory: apps/api
+
       - name: Push schema to the test database
         run: npx prisma db push --skip-generate
         working-directory: apps/api
