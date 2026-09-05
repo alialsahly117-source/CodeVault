@@ -145,10 +145,25 @@ router.post("/reset-password", authRateLimit, async (req, res, next) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
-    await prisma.$transaction([
-      prisma.user.update({ where: { id: record.userId }, data: { passwordHash } }),
-      prisma.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
-    ]);
+
+    // Two concurrent requests with the same token could both pass the
+    // !record.usedAt check above before either write commits (classic
+    // check-then-act race) — a plain update() doesn't guard against that,
+    // it only fails on a missing row, not an already-used one. updateMany
+    // with usedAt: null in the WHERE clause makes the claim atomic: under
+    // Postgres's row locking the second transaction's update blocks until
+    // the first commits, then re-evaluates the condition and finds
+    // usedAt no longer null, so its count is 0 and it's rejected.
+    await prisma.$transaction(async (tx) => {
+      const claimed = await tx.passwordResetToken.updateMany({
+        where: { id: record.id, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+      if (claimed.count === 0) {
+        throw new AppError("رابط إعادة التعيين غير صالح أو منتهي الصلاحية.", 400);
+      }
+      await tx.user.update({ where: { id: record.userId }, data: { passwordHash } });
+    });
 
     res.json({ message: "تم تحديث كلمة المرور بنجاح." });
   } catch (err) {

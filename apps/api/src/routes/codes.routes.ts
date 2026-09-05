@@ -1,12 +1,23 @@
 import { Router } from "express";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
-import { requireAuth, optionalAuth, requireRole } from "../middleware/auth.js";
+import { requireAuth, optionalAuth } from "../middleware/auth.js";
+import { requireRole } from "../middleware/rbac.js";
 import { writeRateLimit, apiRateLimit } from "../middleware/rateLimit.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { createCodeSchema, updateCodeSchema, listQuerySchema, reportSchema } from "../validators/content.validators.js";
 import { slugify } from "../lib/slug.js";
 import { publicUserSelect } from "../lib/selects.js";
+import { canView } from "../lib/visibility.js";
+
+async function requireVisibleCode(codeId: string, user?: { id: string; role: string }) {
+  const code = await prisma.code.findUnique({
+    where: { id: codeId },
+    select: { id: true, authorId: true, visibility: true, status: true },
+  });
+  if (!code || !canView(code, user)) throw new AppError("الكود غير موجود.", 404);
+  return code;
+}
 
 const router = Router();
 
@@ -190,6 +201,7 @@ router.delete("/:id", requireAuth, writeRateLimit, async (req, res, next) => {
 router.post("/:id/like", requireAuth, writeRateLimit, async (req, res, next) => {
   try {
     const codeId = req.params.id;
+    await requireVisibleCode(codeId, req.user);
     const existing = await prisma.like.findFirst({ where: { userId: req.user!.id, codeId } });
     if (existing) {
       await prisma.$transaction([
@@ -211,6 +223,7 @@ router.post("/:id/like", requireAuth, writeRateLimit, async (req, res, next) => 
 router.post("/:id/save", requireAuth, writeRateLimit, async (req, res, next) => {
   try {
     const codeId = req.params.id;
+    await requireVisibleCode(codeId, req.user);
     const existing = await prisma.savedItem.findFirst({ where: { userId: req.user!.id, codeId } });
     if (existing) {
       await prisma.savedItem.delete({ where: { id: existing.id } });
@@ -226,6 +239,7 @@ router.post("/:id/save", requireAuth, writeRateLimit, async (req, res, next) => 
 router.post("/:id/copy", optionalAuth, writeRateLimit, async (req, res, next) => {
   try {
     const codeId = req.params.id;
+    await requireVisibleCode(codeId, req.user);
     await prisma.$transaction([
       prisma.copyEvent.create({ data: { codeId, itemType: "CODE", userId: req.user?.id } }),
       prisma.code.update({ where: { id: codeId }, data: { copyCount: { increment: 1 } } }),
@@ -238,6 +252,7 @@ router.post("/:id/copy", optionalAuth, writeRateLimit, async (req, res, next) =>
 
 router.post("/:id/report", requireAuth, writeRateLimit, async (req, res, next) => {
   try {
+    await requireVisibleCode(req.params.id, req.user);
     const { reason, details } = reportSchema.parse(req.body);
     const report = await prisma.report.create({
       data: { reporterId: req.user!.id, codeId: req.params.id, itemType: "CODE", reason, details },

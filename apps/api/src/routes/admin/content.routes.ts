@@ -7,14 +7,21 @@ import { publicUserSelect } from "../../lib/selects.js";
 
 const router = Router();
 
+const CONTENT_STATUSES = ["PUBLISHED", "HIDDEN", "PENDING"] as const;
+function parseStatusFilter(raw: unknown) {
+  return typeof raw === "string" && (CONTENT_STATUSES as readonly string[]).includes(raw)
+    ? (raw as (typeof CONTENT_STATUSES)[number])
+    : undefined;
+}
+
 router.get("/codes", requireEditor, async (req, res, next) => {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(50, Number(req.query.limit) || 20);
-    const status = req.query.status as string | undefined;
+    const status = parseStatusFilter(req.query.status);
     const q = String(req.query.q || "");
     const where = {
-      ...(status ? { status: status as never } : {}),
+      ...(status ? { status } : {}),
       ...(q ? { title: { contains: q, mode: "insensitive" as const } } : {}),
     };
     const [items, total] = await Promise.all([
@@ -58,10 +65,10 @@ router.get("/prompts", requireEditor, async (req, res, next) => {
   try {
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(50, Number(req.query.limit) || 20);
-    const status = req.query.status as string | undefined;
+    const status = parseStatusFilter(req.query.status);
     const q = String(req.query.q || "");
     const where = {
-      ...(status ? { status: status as never } : {}),
+      ...(status ? { status } : {}),
       ...(q ? { title: { contains: q, mode: "insensitive" as const } } : {}),
     };
     const [items, total] = await Promise.all([

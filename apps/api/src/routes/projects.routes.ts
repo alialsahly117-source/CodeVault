@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
-import { requireAuth, requireRole } from "../middleware/auth.js";
+import { requireAuth, optionalAuth } from "../middleware/auth.js";
+import { requireRole } from "../middleware/rbac.js";
 import { writeRateLimit, apiRateLimit } from "../middleware/rateLimit.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { createProjectSchema, updateProjectSchema } from "../validators/content.validators.js";
 import { slugify } from "../lib/slug.js";
 import { publicUserSelect } from "../lib/selects.js";
+import { canView } from "../lib/visibility.js";
 
 const router = Router();
 
@@ -37,7 +39,7 @@ router.get("/", apiRateLimit, async (req, res, next) => {
   }
 });
 
-router.get("/:idOrSlug", async (req, res, next) => {
+router.get("/:idOrSlug", optionalAuth, async (req, res, next) => {
   try {
     const { idOrSlug } = req.params;
     const project = await prisma.project.findFirst({
@@ -48,7 +50,7 @@ router.get("/:idOrSlug", async (req, res, next) => {
         prompts: { where: { status: "PUBLISHED", visibility: "PUBLIC" }, include: contentInclude },
       },
     });
-    if (!project || project.status !== "PUBLISHED") throw new AppError("المشروع غير موجود.", 404);
+    if (!project || !canView(project, req.user)) throw new AppError("المشروع غير موجود.", 404);
 
     res.json(project);
   } catch (err) {

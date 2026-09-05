@@ -1,12 +1,23 @@
 import { Router } from "express";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
-import { requireAuth, optionalAuth, requireRole } from "../middleware/auth.js";
+import { requireAuth, optionalAuth } from "../middleware/auth.js";
+import { requireRole } from "../middleware/rbac.js";
 import { writeRateLimit, apiRateLimit } from "../middleware/rateLimit.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { createPromptSchema, updatePromptSchema, listQuerySchema, reportSchema } from "../validators/content.validators.js";
 import { slugify } from "../lib/slug.js";
 import { publicUserSelect } from "../lib/selects.js";
+import { canView } from "../lib/visibility.js";
+
+async function requireVisiblePrompt(promptId: string, user?: { id: string; role: string }) {
+  const prompt = await prisma.prompt.findUnique({
+    where: { id: promptId },
+    select: { id: true, authorId: true, visibility: true, status: true },
+  });
+  if (!prompt || !canView(prompt, user)) throw new AppError("البرومبت غير موجود.", 404);
+  return prompt;
+}
 
 const router = Router();
 
@@ -184,6 +195,7 @@ router.delete("/:id", requireAuth, writeRateLimit, async (req, res, next) => {
 router.post("/:id/like", requireAuth, writeRateLimit, async (req, res, next) => {
   try {
     const promptId = req.params.id;
+    await requireVisiblePrompt(promptId, req.user);
     const existing = await prisma.like.findFirst({ where: { userId: req.user!.id, promptId } });
     if (existing) {
       await prisma.$transaction([
@@ -205,6 +217,7 @@ router.post("/:id/like", requireAuth, writeRateLimit, async (req, res, next) => 
 router.post("/:id/save", requireAuth, writeRateLimit, async (req, res, next) => {
   try {
     const promptId = req.params.id;
+    await requireVisiblePrompt(promptId, req.user);
     const existing = await prisma.savedItem.findFirst({ where: { userId: req.user!.id, promptId } });
     if (existing) {
       await prisma.savedItem.delete({ where: { id: existing.id } });
@@ -220,6 +233,7 @@ router.post("/:id/save", requireAuth, writeRateLimit, async (req, res, next) => 
 router.post("/:id/copy", optionalAuth, writeRateLimit, async (req, res, next) => {
   try {
     const promptId = req.params.id;
+    await requireVisiblePrompt(promptId, req.user);
     await prisma.$transaction([
       prisma.copyEvent.create({ data: { promptId, itemType: "PROMPT", userId: req.user?.id } }),
       prisma.prompt.update({ where: { id: promptId }, data: { copyCount: { increment: 1 } } }),
@@ -232,6 +246,7 @@ router.post("/:id/copy", optionalAuth, writeRateLimit, async (req, res, next) =>
 
 router.post("/:id/report", requireAuth, writeRateLimit, async (req, res, next) => {
   try {
+    await requireVisiblePrompt(req.params.id, req.user);
     const { reason, details } = reportSchema.parse(req.body);
     const report = await prisma.report.create({
       data: { reporterId: req.user!.id, promptId: req.params.id, itemType: "PROMPT", reason, details },

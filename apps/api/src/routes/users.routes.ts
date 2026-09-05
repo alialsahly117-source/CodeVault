@@ -2,8 +2,25 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
 import { apiRateLimit } from "../middleware/rateLimit.js";
+import { canView } from "../lib/visibility.js";
 
 const router = Router();
+
+// Defense in depth alongside the visibility checks on like/save/copy/report:
+// even if a row ever exists pointing at content the requester can't see
+// (e.g. it was made private/hidden after being saved), never return the
+// underlying title/description/content for it here.
+function visibleOnly<T extends { code: unknown; prompt: unknown }>(
+  rows: T[],
+  user: { id: string; role: string }
+): T[] {
+  return rows.filter((row) => {
+    const item = (row.code ?? row.prompt) as
+      | { authorId: string; visibility: "PUBLIC" | "PRIVATE"; status: "PUBLISHED" | "HIDDEN" | "PENDING" }
+      | null;
+    return !!item && canView(item, user);
+  });
+}
 
 router.get("/me/saved", requireAuth, apiRateLimit, async (req, res, next) => {
   try {
@@ -15,7 +32,7 @@ router.get("/me/saved", requireAuth, apiRateLimit, async (req, res, next) => {
       },
       orderBy: { createdAt: "desc" },
     });
-    res.json(saved);
+    res.json(visibleOnly(saved, req.user!));
   } catch (err) {
     next(err);
   }
@@ -31,7 +48,7 @@ router.get("/me/liked", requireAuth, apiRateLimit, async (req, res, next) => {
       },
       orderBy: { createdAt: "desc" },
     });
-    res.json(liked);
+    res.json(visibleOnly(liked, req.user!));
   } catch (err) {
     next(err);
   }

@@ -51,7 +51,7 @@ export const adminService = {
   updateReportStatus: (id: string, status: ReportStatus) =>
     api.patch<AdminReport>(`/admin/reports/${id}/status`, { status }),
   hideReportedContent: (id: string) => api.post<AdminReport>(`/admin/reports/${id}/hide-content`),
-  deleteReportedContent: (id: string) => api.post<AdminReport>(`/admin/reports/${id}/delete-content`),
+  deleteReportedContent: (id: string) => api.post<void>(`/admin/reports/${id}/delete-content`),
   banReportedUser: (id: string) => api.post<AdminReport>(`/admin/reports/${id}/ban-user`),
 
   settings: () => api.get<SiteSettings>("/admin/settings"),

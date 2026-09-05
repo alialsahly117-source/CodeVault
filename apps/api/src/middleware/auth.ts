@@ -32,17 +32,6 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   }
 }
 
-// Publishing is a staff-only capability for now — opening it up to regular
-// users is planned as a paid subscription feature, not launched yet.
-export function requireRole(...roles: Role[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ error: "نشر المحتوى متاح حاليًا لطاقم العمل فقط." });
-    }
-    next();
-  };
-}
-
 export async function optionalAuth(req: Request, _res: Response, next: NextFunction) {
   const token = req.cookies?.accessToken as string | undefined;
   if (!token) return next();

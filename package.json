@@ -15,5 +15,9 @@
     "build:admin": "npm run build --workspace=@codevault/admin",
     "db:migrate": "npm run db:migrate --workspace=@codevault/api",
     "db:seed": "npm run db:seed --workspace=@codevault/api"
+  },
+  "overrides": {
+    "qs": "^6.16.0",
+    "dompurify": "^3.4.14"
   }
 }

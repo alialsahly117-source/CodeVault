@@ -8,11 +8,17 @@ import { publicUserSelect } from "../../lib/selects.js";
 
 const router = Router();
 
+const REPORT_STATUSES = ["OPEN", "REVIEWED", "DISMISSED", "ACTION_TAKEN"] as const;
+
 router.get("/", requireModerator, async (req, res, next) => {
   try {
-    const status = req.query.status as string | undefined;
+    const raw = req.query.status;
+    const status =
+      typeof raw === "string" && (REPORT_STATUSES as readonly string[]).includes(raw)
+        ? (raw as (typeof REPORT_STATUSES)[number])
+        : undefined;
     const reports = await prisma.report.findMany({
-      where: status ? { status: status as never } : {},
+      where: status ? { status } : {},
       include: { reporter: { select: publicUserSelect }, code: true, prompt: true },
       orderBy: { createdAt: "desc" },
     });
@@ -54,22 +60,29 @@ router.post("/:id/hide-content", requireModerator, async (req, res, next) => {
   }
 });
 
-// Compound moderation action: delete the reported content and mark the report resolved.
+// Compound moderation action: delete the reported content. Code/Prompt's
+// relation to Report is onDelete: Cascade, so this also removes `report`
+// itself — there is no row left afterward to separately mark ACTION_TAKEN,
+// and a previous version tried to anyway (always 404ing) while silently
+// swallowing real delete failures via .catch(() => null), so a failed
+// delete would still report success. Deletion failures now surface
+// normally via the shared error handler instead of being hidden.
 router.post("/:id/delete-content", requireModerator, async (req, res, next) => {
   try {
     const report = await prisma.report.findUnique({ where: { id: req.params.id } });
     if (!report) throw new AppError("البلاغ غير موجود.", 404);
 
     if (report.itemType === "CODE" && report.codeId) {
-      await prisma.code.delete({ where: { id: report.codeId } }).catch(() => null);
+      await prisma.code.delete({ where: { id: report.codeId } });
       await logAction(req, "delete_code", "code", report.codeId, { viaReport: report.id });
     } else if (report.itemType === "PROMPT" && report.promptId) {
-      await prisma.prompt.delete({ where: { id: report.promptId } }).catch(() => null);
+      await prisma.prompt.delete({ where: { id: report.promptId } });
       await logAction(req, "delete_prompt", "prompt", report.promptId, { viaReport: report.id });
+    } else {
+      throw new AppError("تعذر تحديد المحتوى المرتبط بهذا البلاغ.", 400);
     }
 
-    const updated = await prisma.report.update({ where: { id: report.id }, data: { status: "ACTION_TAKEN" } });
-    res.json(updated);
+    res.status(204).end();
   } catch (err) {
     next(err);
   }
