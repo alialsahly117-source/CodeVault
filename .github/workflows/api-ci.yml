@@ -26,14 +26,20 @@ jobs:
           POSTGRES_PASSWORD: codevault
           POSTGRES_DB: codevault_test
         ports:
-          - 5432:5432
+          # Mapped to 5434, not Postgres's default 5432, because
+          # apps/api/.env.test hardcodes localhost:5434 (matching this
+          # project's local docker-compose Postgres) and vitest's setup.ts
+          # loads that file with override:true — it wins over any
+          # DATABASE_URL this workflow sets, so the two must agree or the
+          # test run silently targets a port nothing is listening on here.
+          - 5434:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql://codevault:codevault@localhost:5432/codevault_test?schema=public
+      DATABASE_URL: postgresql://codevault:codevault@localhost:5434/codevault_test?schema=public
       NODE_ENV: test
       JWT_ACCESS_SECRET: ci_only_access_secret_never_use_in_production_1234567890
       JWT_REFRESH_SECRET: ci_only_refresh_secret_never_use_in_production_1234567890
