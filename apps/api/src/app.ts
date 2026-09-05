@@ -7,6 +7,7 @@ import { AppError, errorHandler, notFoundHandler } from "./middleware/errorHandl
 import { apiRateLimit } from "./middleware/rateLimit.js";
 
 import authRoutes from "./routes/auth.routes.js";
+import twoFactorRoutes from "./routes/twoFactor.routes.js";
 import codesRoutes from "./routes/codes.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
 import promptsRoutes from "./routes/prompts.routes.js";
@@ -52,6 +53,7 @@ app.use(passport.initialize());
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/auth/2fa", twoFactorRoutes);
 app.use("/api/codes", codesRoutes);
 app.use("/api/projects", projectsRoutes);
 app.use("/api/prompts", promptsRoutes);

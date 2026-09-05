@@ -25,6 +25,8 @@ services:
         value: 15m
       - key: JWT_REFRESH_TTL
         value: 30d
+      - key: TWO_FACTOR_ENCRYPTION_KEY
+        generateValue: true
       - key: COOKIE_SECURE
         value: "true"
       # web/admin/api now share codevault.vip as a real parent domain, so

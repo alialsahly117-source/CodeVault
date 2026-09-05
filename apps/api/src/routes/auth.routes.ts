@@ -5,6 +5,7 @@ import passport from "../config/passport.js";
 import { prisma } from "../lib/prisma.js";
 import { clearAuthCookies } from "../lib/cookies.js";
 import { startSession, rotateSession, endSession, revokeAllSessions } from "../lib/session.js";
+import { signTwoFactorPendingToken } from "../lib/jwt.js";
 import { sendPasswordResetEmail } from "../lib/email.js";
 import { requireAuth } from "../middleware/auth.js";
 import { authRateLimit } from "../middleware/rateLimit.js";
@@ -66,6 +67,15 @@ router.post("/login", authRateLimit, async (req, res, next) => {
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new AppError("البريد الإلكتروني أو كلمة المرور غير صحيحة.", 401);
+
+    // The password alone doesn't start a session on a 2FA-protected account —
+    // hand back a short-lived pending token instead, which /api/auth/2fa/login
+    // exchanges for real cookies once the second factor checks out. lastLoginAt
+    // only updates once that second step succeeds (see twoFactor.routes.ts),
+    // so a password-only attempt never counts as a login on its own.
+    if (user.twoFactorEnabled) {
+      return res.json({ requiresTwoFactor: true, pendingToken: signTwoFactorPendingToken(user.id) });
+    }
 
     await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     await startSession(res, user);
@@ -187,6 +197,7 @@ router.get("/me", requireAuth, async (req, res, next) => {
       lastLoginAt: user.lastLoginAt,
       hasPassword: !!user.passwordHash,
       hasGoogle: !!user.googleId,
+      twoFactorEnabled: user.twoFactorEnabled,
       profile: user.profile,
     });
   } catch (err) {

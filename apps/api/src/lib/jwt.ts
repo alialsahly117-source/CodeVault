@@ -35,3 +35,29 @@ export function verifyAccessToken(token: string): JwtPayload {
 export function verifyRefreshToken(token: string): JwtPayload {
   return jwt.verify(token, REFRESH_SECRET) as JwtPayload;
 }
+
+interface TwoFactorPendingPayload {
+  sub: string;
+  purpose: "2fa-pending";
+}
+
+/**
+ * Issued after a correct password when the account has 2FA enabled — proves
+ * "this request just supplied the right password" without being a usable
+ * session on its own. Short-lived, and the "purpose" claim keeps it from
+ * being mistaken for (or swapped in for) a real access token even though it
+ * shares a secret with one.
+ */
+export function signTwoFactorPendingToken(userId: string) {
+  return jwt.sign({ sub: userId, purpose: "2fa-pending" } satisfies TwoFactorPendingPayload, ACCESS_SECRET, {
+    expiresIn: "5m",
+  });
+}
+
+export function verifyTwoFactorPendingToken(token: string): string {
+  const payload = jwt.verify(token, ACCESS_SECRET) as TwoFactorPendingPayload;
+  if (payload.purpose !== "2fa-pending") {
+    throw new Error("Not a two-factor pending token.");
+  }
+  return payload.sub;
+}

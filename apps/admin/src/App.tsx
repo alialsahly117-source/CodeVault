@@ -17,6 +17,7 @@ import { TagsPage } from "./pages/TagsPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { LogsPage } from "./pages/LogsPage";
+import { SecurityPage } from "./pages/SecurityPage";
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="prompts/new" element={<NewPromptPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="tags" element={<TagsPage />} />
+          <Route path="security" element={<SecurityPage />} />
 
           <Route element={<RequireModerator />}>
             <Route path="reports" element={<ReportsPage />} />

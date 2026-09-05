@@ -40,6 +40,7 @@ const groups: NavGroup[] = [
     items: [
       { to: "/settings", label: "الإعدادات", minRole: "admin" },
       { to: "/logs", label: "سجل النشاط", minRole: "admin" },
+      { to: "/security", label: "الأمان" },
     ],
   },
 ];

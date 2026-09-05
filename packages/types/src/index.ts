@@ -25,6 +25,7 @@ export interface User {
   lastLoginAt?: string | null;
   hasPassword?: boolean;
   hasGoogle?: boolean;
+  twoFactorEnabled?: boolean;
   profile: Profile | null;
 }
 
