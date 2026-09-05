@@ -1,0 +1,78 @@
+name: API CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/api-ci.yml"
+  pull_request:
+    paths:
+      - "apps/api/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/api-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: codevault
+          POSTGRES_PASSWORD: codevault
+          POSTGRES_DB: codevault_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://codevault:codevault@localhost:5432/codevault_test?schema=public
+      NODE_ENV: test
+      JWT_ACCESS_SECRET: ci_only_access_secret_never_use_in_production_1234567890
+      JWT_REFRESH_SECRET: ci_only_refresh_secret_never_use_in_production_1234567890
+      COOKIE_SECURE: "false"
+      COOKIE_SAMESITE: lax
+      WEB_URL: http://localhost:5173
+      ADMIN_URL: http://localhost:3001
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Installs at the workspace root — the fast path for running tests.
+      # This alone would NOT have caught the 2026-09-05 incident (a
+      # devDependency peer conflict that only broke npm install inside
+      # apps/api's *isolated* Docker build context) — that's what the
+      # docker-build job below is for.
+      - run: npm install
+
+      - name: Push schema to the test database
+        run: npx prisma db push --skip-generate
+        working-directory: apps/api
+
+      - run: npm test --workspace=@codevault/api
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Builds apps/api with the exact Dockerfile + build context Render
+      # uses (see render.yaml: dockerfilePath/dockerContext). This is what
+      # actually caught the 2026-09-05 failure mode — npm install failing
+      # inside that isolated context — since apps/api has no lockfile of
+      # its own and resolves dependencies independently of the workspace
+      # root. Deliberately does not run the image; migrate deploy needs a
+      # real database, and Render's own deploy is what runs the container.
+      - name: Build the production image (mirrors Render)
+        run: docker build -f apps/api/Dockerfile apps/api
