@@ -1,3 +1,15 @@
+# Without this, a request to /api/* (e.g. if VITE_API_URL is ever unset,
+# leaving the app to call a relative "/api" instead of the real
+# api.codevault.vip origin) silently falls through to the catch-all below
+# and gets served index.html with a 200 — the app then treats that HTML as
+# a "successful" JSON response, which crashes React Query's own invariant
+# check ("data is undefined") instead of failing as a clean, recognizable
+# API error. This makes /api/* 404 loudly instead.
+[[redirects]]
+  from = "/api/*"
+  to = "/index.html"
+  status = 404
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
