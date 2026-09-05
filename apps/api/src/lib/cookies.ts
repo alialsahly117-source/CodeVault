@@ -19,16 +19,26 @@ const domain = process.env.COOKIE_DOMAIN || undefined;
 
 const base: CookieOptions = { httpOnly: true, secure: effectiveSecure, sameSite, domain };
 
+// The refresh cookie was previously scoped to /api/auth/refresh so it
+// wouldn't ride along on every request. That also meant it never reached
+// /api/auth/logout — which left logout unable to revoke the session
+// server-side, the one thing it most needs to do now that refresh tokens
+// are tracked and revocable. Reliable revocation is worth more than the
+// narrower path: the cookie is still httpOnly + Secure and only ever
+// travels to our own API over HTTPS.
 export function setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
   res.cookie("accessToken", accessToken, { ...base, maxAge: 15 * 60 * 1000, path: "/" });
   res.cookie("refreshToken", refreshToken, {
     ...base,
     maxAge: 30 * 24 * 60 * 60 * 1000,
-    path: "/api/auth/refresh",
+    path: "/",
   });
 }
 
 export function clearAuthCookies(res: Response) {
   res.clearCookie("accessToken", { path: "/", domain });
+  res.clearCookie("refreshToken", { path: "/", domain });
+  // Old sessions were issued with the narrower path; without clearing that
+  // variant too, a stale cookie would linger in browsers after logout.
   res.clearCookie("refreshToken", { path: "/api/auth/refresh", domain });
 }

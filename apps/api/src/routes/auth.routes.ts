@@ -3,8 +3,8 @@ import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import passport from "../config/passport.js";
 import { prisma } from "../lib/prisma.js";
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt.js";
-import { setAuthCookies, clearAuthCookies } from "../lib/cookies.js";
+import { clearAuthCookies } from "../lib/cookies.js";
+import { startSession, rotateSession, endSession, revokeAllSessions } from "../lib/session.js";
 import { sendPasswordResetEmail } from "../lib/email.js";
 import { requireAuth } from "../middleware/auth.js";
 import { authRateLimit } from "../middleware/rateLimit.js";
@@ -41,9 +41,7 @@ router.post("/register", authRateLimit, async (req, res, next) => {
       },
     });
 
-    const accessToken = signAccessToken({ sub: user.id, role: user.role });
-    const refreshToken = signRefreshToken({ sub: user.id, role: user.role });
-    setAuthCookies(res, accessToken, refreshToken);
+    await startSession(res, user);
 
     res.status(201).json({ id: user.id, email: user.email, role: user.role });
   } catch (err) {
@@ -70,10 +68,7 @@ router.post("/login", authRateLimit, async (req, res, next) => {
     if (!valid) throw new AppError("البريد الإلكتروني أو كلمة المرور غير صحيحة.", 401);
 
     await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-
-    const accessToken = signAccessToken({ sub: user.id, role: user.role });
-    const refreshToken = signRefreshToken({ sub: user.id, role: user.role });
-    setAuthCookies(res, accessToken, refreshToken);
+    await startSession(res, user);
 
     res.json({ id: user.id, email: user.email, role: user.role });
   } catch (err) {
@@ -81,9 +76,13 @@ router.post("/login", authRateLimit, async (req, res, next) => {
   }
 });
 
-router.post("/logout", (_req, res) => {
-  clearAuthCookies(res);
-  res.status(204).end();
+router.post("/logout", async (req, res, next) => {
+  try {
+    await endSession(res, req.cookies?.refreshToken as string | undefined);
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.post("/refresh", async (req, res, next) => {
@@ -91,16 +90,12 @@ router.post("/refresh", async (req, res, next) => {
     const token = req.cookies?.refreshToken as string | undefined;
     if (!token) throw new AppError("غير مصرح.", 401);
 
-    const payload = verifyRefreshToken(token);
-    const user = await prisma.user.findUnique({ where: { id: payload.sub } });
-    if (!user || user.status !== "ACTIVE") throw new AppError("غير مصرح.", 401);
-
-    const accessToken = signAccessToken({ sub: user.id, role: user.role });
-    const refreshToken = signRefreshToken({ sub: user.id, role: user.role });
-    setAuthCookies(res, accessToken, refreshToken);
-
+    const user = await rotateSession(res, token);
     res.json({ id: user.id, email: user.email, role: user.role });
   } catch {
+    // Deliberately uniform: never reveal whether the token was expired,
+    // forged, or flagged as reused.
+    clearAuthCookies(res);
     next(new AppError("الجلسة غير صالحة، الرجاء تسجيل الدخول مجددًا.", 401));
   }
 });
@@ -165,6 +160,11 @@ router.post("/reset-password", authRateLimit, async (req, res, next) => {
       await tx.user.update({ where: { id: record.userId }, data: { passwordHash } });
     });
 
+    // A password reset is the one action that has to assume the old
+    // credentials were compromised — so every existing session for this
+    // account goes with them, including any the attacker still holds.
+    await revokeAllSessions(record.userId);
+
     res.json({ message: "تم تحديث كلمة المرور بنجاح." });
   } catch (err) {
     next(err);
@@ -202,7 +202,7 @@ router.patch("/me", requireAuth, async (req, res, next) => {
       data: {
         ...(data.displayName ? { displayName: data.displayName } : {}),
         ...(data.bio !== undefined ? { bio: data.bio } : {}),
-        ...(data.avatarUrl !== undefined ? { avatarUrl: data.avatarUrl || null } : {}),
+        ...(data.avatarUrl !== undefined ? { avatarUrl: data.avatarUrl } : {}),
       },
     });
     res.json(profile);
@@ -232,9 +232,7 @@ router.get(
   async (req, res) => {
     const user = req.user as { id: string; role: "USER" | "EDITOR" | "MODERATOR" | "ADMIN" };
     await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-    const accessToken = signAccessToken({ sub: user.id, role: user.role });
-    const refreshToken = signRefreshToken({ sub: user.id, role: user.role });
-    setAuthCookies(res, accessToken, refreshToken);
+    await startSession(res, user);
     res.redirect(`${webUrl}/`);
   }
 );

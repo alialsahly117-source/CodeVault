@@ -1,11 +1,7 @@
 import { z } from "zod";
+import { optionalHttpsUrl } from "./fields.js";
 
-const previewImageUrl = z
-  .string()
-  .trim()
-  .refine((v) => v === "" || z.string().url().safeParse(v).success, "رابط الصورة غير صحيح")
-  .transform((v) => (v === "" ? undefined : v))
-  .optional();
+const previewImageUrl = optionalHttpsUrl;
 
 export const createCodeSchema = z.object({
   title: z.string().min(3, "العنوان قصير جدًا").max(120),

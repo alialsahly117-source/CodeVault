@@ -69,7 +69,8 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  profile    Profile?
+  profile       Profile?
+  refreshTokens RefreshToken[]
   projects   Project[]
   codes      Code[]
   prompts    Prompt[]
@@ -297,6 +298,27 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 
   @@map("password_reset_tokens")
+}
+
+/// One row per issued refresh token. Refreshing consumes the current row and
+/// issues a new one (rotation); presenting an already-consumed token means
+/// the token leaked, so the whole family — every token descended from that
+/// login — is deleted. Deleting rows is also what makes logout, password
+/// reset and banning able to actually end a session server-side, which a
+/// bare stateless JWT can't do.
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  familyId  String
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("refresh_tokens")
 }
 
 model AdminLog {

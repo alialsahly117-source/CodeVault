@@ -11,11 +11,20 @@ export interface JwtPayload {
   role: Role;
 }
 
+/**
+ * Refresh tokens carry a random jti purely so two tokens issued for the same
+ * user in the same second aren't byte-identical — they're stored by hash,
+ * and identical strings would collide on that unique index.
+ */
+export interface RefreshJwtPayload extends JwtPayload {
+  jti: string;
+}
+
 export function signAccessToken(payload: JwtPayload) {
   return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_TTL });
 }
 
-export function signRefreshToken(payload: JwtPayload) {
+export function signRefreshToken(payload: RefreshJwtPayload) {
   return jwt.sign(payload, REFRESH_SECRET, { expiresIn: REFRESH_TTL });
 }
 

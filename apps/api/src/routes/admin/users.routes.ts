@@ -5,6 +5,7 @@ import { AppError } from "../../middleware/errorHandler.js";
 import { changeRoleSchema, banUserSchema } from "../../validators/admin.validators.js";
 import { logAction } from "./_logAction.js";
 import { adminUserListSelect } from "../../lib/selects.js";
+import { revokeAllSessions } from "../../lib/session.js";
 
 const router = Router();
 
@@ -68,6 +69,15 @@ router.patch("/:id/status", requireModerator, async (req, res, next) => {
       data: { status },
       select: adminUserListSelect,
     });
+
+    // requireAuth already rejects non-ACTIVE accounts on every request, so
+    // this isn't what locks them out — it drops the stored refresh tokens
+    // so a suspended account can't quietly resume if it's reactivated, and
+    // leaves nothing behind for a stolen token to ride on.
+    if (status !== "ACTIVE") {
+      await revokeAllSessions(user.id);
+    }
+
     await logAction(req, "change_status", "user", user.id, { status });
     res.json(user);
   } catch (err) {

@@ -20,6 +20,7 @@ export async function resetDb() {
     prisma.tag.deleteMany(),
     prisma.category.deleteMany(),
     prisma.passwordResetToken.deleteMany(),
+    prisma.refreshToken.deleteMany(),
     prisma.adminLog.deleteMany(),
     prisma.profile.deleteMany(),
     prisma.user.deleteMany(),
