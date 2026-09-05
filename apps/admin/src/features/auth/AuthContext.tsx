@@ -12,7 +12,14 @@ interface AuthContextValue {
   isStaff: boolean;
   isAdmin: boolean;
   isModerator: boolean;
-  refetch: () => void;
+  /**
+   * Resolves only once fresh data has actually landed — callers that
+   * navigate right after (e.g. LoginPage) must await this, or RequireStaff
+   * can still see the stale pre-login `isAuthenticated: false` on the very
+   * next render and bounce straight back to /login before the real answer
+   * arrives.
+   */
+  refetch: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -20,7 +27,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["auth", "me"],
     queryFn: authService.me,
     retry: false,
@@ -37,9 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isStaff: !!role && role !== "USER",
     isAdmin: role === "ADMIN",
     isModerator: role === "ADMIN" || role === "MODERATOR",
-    refetch: () => {
-      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
-      refetch();
+    refetch: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
     },
     logout: async () => {
       await authService.logout();

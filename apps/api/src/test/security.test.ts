@@ -267,4 +267,10 @@ describe("startup configuration guard", () => {
     expect(() => validateEnv()).toThrow(/COOKIE_SECURE/);
     restore();
   });
+
+  it("refuses to start without a two-factor encryption key", () => {
+    delete process.env.TWO_FACTOR_ENCRYPTION_KEY;
+    expect(() => validateEnv()).toThrow(/TWO_FACTOR_ENCRYPTION_KEY/);
+    restore();
+  });
 });

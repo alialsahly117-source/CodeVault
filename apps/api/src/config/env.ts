@@ -19,10 +19,12 @@ export function validateEnv() {
 
   const accessSecret = process.env.JWT_ACCESS_SECRET;
   const refreshSecret = process.env.JWT_REFRESH_SECRET;
+  const twoFactorKey = process.env.TWO_FACTOR_ENCRYPTION_KEY;
 
   for (const [name, value] of [
     ["JWT_ACCESS_SECRET", accessSecret],
     ["JWT_REFRESH_SECRET", refreshSecret],
+    ["TWO_FACTOR_ENCRYPTION_KEY", twoFactorKey],
   ] as const) {
     if (!value) {
       problems.push(`${name} مفقود.`);
