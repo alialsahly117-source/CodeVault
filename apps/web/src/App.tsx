@@ -1,9 +1,11 @@
-import { Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { MainLayout } from "./layouts/MainLayout";
 import { ProtectedRoute } from "./features/auth/ProtectedRoute";
 import { settingsService } from "./services/settings.service";
 import { useAuth } from "./features/auth/AuthContext";
+import { initAnalytics, trackPageView } from "./lib/analytics";
 
 import { HomePage } from "./pages/HomePage";
 import { ExplorePage } from "./pages/ExplorePage";
@@ -37,11 +39,23 @@ function MaintenanceNotice() {
 
 export default function App() {
   const { isStaff } = useAuth();
+  const location = useLocation();
   const { data: settings } = useQuery({
     queryKey: ["public-settings"],
     queryFn: settingsService.get,
     staleTime: 60_000,
   });
+
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
+  // React Router doesn't trigger a full page load on navigation, so GA's
+  // own automatic page_view (tied to the load event) never fires again
+  // after the first route — send one on every path change instead.
+  useEffect(() => {
+    trackPageView(location.pathname);
+  }, [location.pathname]);
 
   // Staff can still browse the public site during maintenance (e.g. to verify a fix).
   if (settings?.maintenanceMode && !isStaff) {
