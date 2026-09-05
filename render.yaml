@@ -37,10 +37,14 @@ services:
         value: "lax"
       - key: COOKIE_DOMAIN
         value: ".codevault.vip"
-      - key: SMTP_USER
-        value: alialsahly.ai@gmail.com
-      - key: SMTP_PASS
+      # Gmail SMTP never worked here — Render's containers time out on every
+      # outbound SMTP connection (port 465/587), a common anti-spam
+      # restriction on free/cheap hosting. Resend's API runs over HTTPS
+      # (port 443), which isn't affected. See lib/email.ts.
+      - key: RESEND_API_KEY
         sync: false
+      - key: RESEND_FROM_EMAIL
+        value: ""
       - key: SMTP_FROM_NAME
         value: "CodeVault"
       - key: GOOGLE_CLIENT_ID
