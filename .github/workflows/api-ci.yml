@@ -49,7 +49,7 @@ jobs:
       WEB_URL: http://localhost:5173
       ADMIN_URL: http://localhost:3001
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -76,7 +76,7 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Builds apps/api with the exact Dockerfile + build context Render
       # uses (see render.yaml: dockerfilePath/dockerContext). This is what
