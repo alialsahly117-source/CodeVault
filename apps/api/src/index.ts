@@ -7,11 +7,11 @@ import { validateEnv } from "./config/env.js";
 // a runtime error on someone's first login.
 validateEnv();
 
-// Render's containers resolve AAAA (IPv6) records for hosts like
-// smtp.gmail.com but have no outbound IPv6 route, so any connection that
-// happens to pick the IPv6 result hangs and fails with ENETUNREACH/ETIMEDOUT.
-// This forces every DNS lookup in the process (not just nodemailer's) to
-// prefer IPv4, which is what actually has a route out.
+// Render's containers can resolve AAAA (IPv6) records for some outbound
+// hosts but have no outbound IPv6 route, so a connection that happens to
+// pick the IPv6 result hangs and fails with ENETUNREACH/ETIMEDOUT. This
+// forces every DNS lookup in the process to prefer IPv4, which actually
+// has a route out.
 dns.setDefaultResultOrder("ipv4first");
 
 // Imported dynamically so the two lines above run first — a static import
