@@ -1,0 +1,31 @@
+version: 2
+updates:
+  # Single npm workspaces monorepo — apps/api, apps/web, and apps/admin all
+  # resolve through the one root package-lock.json, so "/" covers all three.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      # Patch/minor bumps rarely need individual review; batching them keeps
+      # the PR queue from becoming noise this project has to triage one by
+      # one every week.
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    open-pull-requests-limit: 10
+
+  # apps/api/Dockerfile pins node:20-alpine — keep that base image patched.
+  - package-ecosystem: "docker"
+    directory: "/apps/api"
+    schedule:
+      interval: "weekly"
+
+  # Keep the CI workflow's own actions (actions/checkout, actions/setup-node)
+  # current — see the Node 20 deprecation warning api-ci.yml's first runs
+  # already surfaced.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

@@ -8,12 +8,13 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/api-ci.yml"
+  # No path filter here (unlike push, above): main now requires these two
+  # checks to pass before any PR can merge (branch protection), so every PR
+  # must trigger them — even a docs-only or dependabot.yml-only change —
+  # or that PR would sit forever with "required checks expected" and never
+  # become mergeable.
   pull_request:
-    paths:
-      - "apps/api/**"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/api-ci.yml"
+    branches: [main]
 
 jobs:
   test:
