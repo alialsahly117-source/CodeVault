@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ErrorState, Skeleton, EmptyState, formatDate } from "@codevault/ui";
+import { ErrorState, Skeleton, EmptyState, PreviewImage, formatDate } from "@codevault/ui";
 import { projectsService } from "../services/projects.service";
 import { CodeCard } from "../features/codes/CodeCard";
 import { PromptCard } from "../features/prompts/PromptCard";
@@ -43,7 +43,7 @@ export function ProjectDetailPage() {
 
       {project.previewImageUrl && (
         <div className="mt-6 overflow-hidden rounded-xl border border-border">
-          <img src={project.previewImageUrl} alt={project.title} className="max-h-[480px] w-full object-cover" />
+          <PreviewImage src={project.previewImageUrl} alt={project.title} size="hero" />
         </div>
       )}
 

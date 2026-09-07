@@ -12,6 +12,7 @@ import {
   Input,
   Label,
   ErrorState,
+  PreviewImage,
   Skeleton,
   formatDate,
   formatNumber,
@@ -175,7 +176,7 @@ export function PromptDetailPage() {
 
       {prompt.previewImageUrl && (
         <div className="mt-6 overflow-hidden rounded-xl border border-border">
-          <img src={prompt.previewImageUrl} alt={prompt.title} className="max-h-[480px] w-full object-cover" />
+          <PreviewImage src={prompt.previewImageUrl} alt={prompt.title} size="hero" />
         </div>
       )}
 

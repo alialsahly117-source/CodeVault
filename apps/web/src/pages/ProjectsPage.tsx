@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CardSkeleton, EmptyState, ErrorState } from "@codevault/ui";
+import { CardSkeleton, EmptyState, ErrorState, PreviewImage } from "@codevault/ui";
 import { projectsService } from "../services/projects.service";
 import { usePageMeta } from "../hooks/usePageMeta";
 
@@ -36,9 +36,7 @@ export function ProjectsPage() {
                 to={`/projects/${p.slug}`}
                 className="flex flex-col overflow-hidden rounded-xl border border-border bg-bg-card transition-colors hover:border-accent"
               >
-                {p.previewImageUrl && (
-                  <img src={p.previewImageUrl} alt={p.title} className="h-36 w-full object-cover" />
-                )}
+                {p.previewImageUrl && <PreviewImage src={p.previewImageUrl} alt={p.title} size="card" />}
                 <div className="flex flex-1 flex-col p-4">
                   <h3 className="font-semibold text-text">{p.title}</h3>
                   <p className="mt-1 line-clamp-2 flex-1 text-sm text-text-secondary">{p.description}</p>

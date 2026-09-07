@@ -9,3 +9,4 @@ export * from "./Pagination";
 export * from "./ConfirmDialog";
 export * from "./FilterBar";
 export * from "./TagsInput";
+export * from "./PreviewImage";
