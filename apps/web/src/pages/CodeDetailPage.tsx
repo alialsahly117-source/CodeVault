@@ -6,7 +6,16 @@ import { codesService } from "../services/content.service";
 import { useAuth } from "../features/auth/AuthContext";
 import { CodeViewer } from "../features/codes/CodeViewer";
 import { ReportDialog } from "../features/reports/ReportDialog";
-import { ConfirmDialog, Badge, Button, ErrorState, Skeleton, formatDate, formatNumber } from "@codevault/ui";
+import {
+  ConfirmDialog,
+  Badge,
+  Button,
+  ErrorState,
+  PreviewImage,
+  Skeleton,
+  formatDate,
+  formatNumber,
+} from "@codevault/ui";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { downloadCodeFile } from "../lib/download";
 
@@ -170,7 +179,7 @@ export function CodeDetailPage() {
 
       {code.previewImageUrl && (
         <div className="mt-6 overflow-hidden rounded-xl border border-border">
-          <img src={code.previewImageUrl} alt={code.title} className="max-h-[480px] w-full object-cover" />
+          <PreviewImage src={code.previewImageUrl} alt={code.title} size="hero" />
         </div>
       )}
 
