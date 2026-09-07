@@ -79,7 +79,15 @@ export function CodeViewer({ code, language }: { code: string; language: string 
           {fullscreen ? "إغلاق ملء الشاشة" : "ملء الشاشة"}
         </Button>
       </div>
-      <div className="flex-1">{editor}</div>
+      {/* Monaco computes its internal scroll/line offsets assuming an LTR
+          ancestor; inheriting dir="rtl" from the page corrupts them into
+          huge (~2^24px) offsets that push every line off-screen. Code is
+          always written left-to-right regardless of the UI language, so
+          isolating the editor's own direction is also the correct call
+          content-wise, not just a workaround. */}
+      <div className="flex-1" dir="ltr">
+        {editor}
+      </div>
     </div>
   );
 }
