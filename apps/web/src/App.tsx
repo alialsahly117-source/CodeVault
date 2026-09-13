@@ -6,6 +6,7 @@ import { ProtectedRoute } from "./features/auth/ProtectedRoute";
 import { settingsService } from "./services/settings.service";
 import { useAuth } from "./features/auth/AuthContext";
 import { initAnalytics, trackPageView } from "./lib/analytics";
+import { useFrameBreakout } from "./lib/frameBreakout";
 
 import { HomePage } from "./pages/HomePage";
 import { ExplorePage } from "./pages/ExplorePage";
@@ -45,6 +46,10 @@ export default function App() {
     queryFn: settingsService.get,
     staleTime: 60_000,
   });
+
+  // If this site is embedded as a preview elsewhere, authentication routes
+  // leave the frame and open on our own origin.
+  useFrameBreakout();
 
   useEffect(() => {
     initAnalytics();
