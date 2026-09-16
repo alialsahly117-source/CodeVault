@@ -20,17 +20,21 @@
 # user-supplied preview/avatar images over https, and the API on
 # api.codevault.vip. Anything outside that list is blocked.
 #
-# frame-ancestors: novatech.ly embeds this site as a live preview of the
+# frame-ancestors: the NovaTech site embeds this one as a live preview of the
 # platform on its products page. The allowance is deliberately narrow — our
-# own origin plus that one domain, and nothing else — because this site has
-# a login and account creation, and any wider allowance would open those
-# forms to clickjacking. X-Frame-Options is intentionally absent: it has no
-# way to express an allow-list, and browsers that honour it would let its
-# DENY override the frame-ancestors directive below.
+# own origin plus NovaTech's, and nothing else — because this site has a login
+# and account creation, and any wider allowance would open those forms to
+# clickjacking. X-Frame-Options is intentionally absent: it cannot express an
+# allow-list, and browsers that honour it would let its DENY override the
+# frame-ancestors directive below.
+#
+# novatech-site.netlify.app is that site's pre-launch host. Drop it from the
+# list once novatech.ly is serving, so the allowance stays as small as the
+# reason for it.
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https:; connect-src 'self' https://api.codevault.vip https://cdn.jsdelivr.net https://www.google-analytics.com https://www.googletagmanager.com https://o4512035256139776.ingest.us.sentry.io; worker-src 'self' blob:; child-src 'self' blob:; frame-ancestors 'self' https://novatech.ly https://www.novatech.ly; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https:; connect-src 'self' https://api.codevault.vip https://cdn.jsdelivr.net https://www.google-analytics.com https://www.googletagmanager.com https://o4512035256139776.ingest.us.sentry.io; worker-src 'self' blob:; child-src 'self' blob:; frame-ancestors 'self' https://novatech.ly https://www.novatech.ly https://novatech-site.netlify.app; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
