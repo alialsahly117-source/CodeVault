@@ -10,7 +10,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-/** Stands in for the Anthropic Messages API so no test makes a real call. */
+/** Stands in for the Gemini API so no test makes a real call. */
 function stubModel(body: unknown, ok = true, status = 200) {
   const fetchMock = vi.fn().mockResolvedValue({
     ok,
@@ -22,8 +22,13 @@ function stubModel(body: unknown, ok = true, status = 200) {
   return fetchMock;
 }
 
-function modelReply(fields: { title: string; description: string; content: string }) {
-  return { content: [{ type: "text", text: JSON.stringify(fields) }] };
+function modelReply(
+  fields: { title: string; description: string; content: string },
+  finishReason = "STOP"
+) {
+  return {
+    candidates: [{ finishReason, content: { parts: [{ text: JSON.stringify(fields) }] } }],
+  };
 }
 
 describe("POST /api/prompts/:id/translate", () => {
@@ -88,12 +93,41 @@ describe("POST /api/prompts/:id/translate", () => {
 
   it("surfaces a clean error when the model returns something unparseable", async () => {
     const prompt = await createPrompt();
-    stubModel({ content: [{ type: "text", text: "sorry, I can't do that" }] });
+    stubModel({ candidates: [{ finishReason: "STOP", content: { parts: [{ text: "not json" }] } }] });
 
     const res = await agent().post(`/api/prompts/${prompt.id}/translate`).send({ language: "en" });
 
     expect(res.status).toBe(502);
     expect(await prisma.promptTranslation.count()).toBe(0);
+  });
+
+  it("refuses to cache a truncated translation", async () => {
+    const prompt = await createPrompt();
+    // Valid JSON, but the model ran out of output budget — storing this would
+    // silently cache half a prompt.
+    stubModel(
+      modelReply({ title: "T", description: "D", content: "half a transl" }, "MAX_TOKENS")
+    );
+
+    const res = await agent().post(`/api/prompts/${prompt.id}/translate`).send({ language: "en" });
+
+    expect(res.status).toBe(502);
+    expect(await prisma.promptTranslation.count()).toBe(0);
+  });
+
+  it("sends the prompt to the configured Gemini model", async () => {
+    const prompt = await createPrompt();
+    const fetchMock = stubModel(modelReply({ title: "T", description: "D", content: "C" }));
+
+    await agent().post(`/api/prompts/${prompt.id}/translate`).send({ language: "en" });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain("generativelanguage.googleapis.com");
+    expect(String(url)).toContain(":generateContent");
+    expect((init as RequestInit).headers).toHaveProperty("x-goog-api-key");
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body.generationConfig.responseMimeType).toBe("application/json");
+    expect(body.system_instruction.parts[0].text).toContain("English");
   });
 });
 
