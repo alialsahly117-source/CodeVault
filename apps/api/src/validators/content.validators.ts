@@ -50,6 +50,10 @@ export const createProjectSchema = z.object({
 
 export const updateProjectSchema = createProjectSchema.partial();
 
+export const translatePromptSchema = z.object({
+  language: z.enum(["ar", "en"], { errorMap: () => ({ message: "لغة غير مدعومة." }) }),
+});
+
 export const reportSchema = z.object({
   reason: z.enum(["SPAM", "MALICIOUS_CODE", "COPYRIGHT", "INAPPROPRIATE", "OTHER"]),
   details: z.string().max(500).optional(),

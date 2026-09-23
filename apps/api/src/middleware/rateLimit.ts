@@ -28,3 +28,14 @@ export const writeRateLimit = rateLimit({
   legacyHeaders: false,
   message: { error: "طلبات كثيرة جدًا. الرجاء المحاولة لاحقًا." },
 });
+
+// Every miss here is a paid model call, so this is a spend cap rather than an
+// abuse cap — hence far tighter than the other limiters, and per hour rather
+// than per minute. Cache hits are served before this ever runs.
+export const translateRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: isTest ? 100_000 : 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "تجاوزت حد الترجمات المسموح بها. حاول بعد قليل." },
+});

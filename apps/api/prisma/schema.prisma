@@ -214,14 +214,32 @@ model Prompt {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  tags       PromptTag[]
-  likes      Like[]
-  savedItems SavedItem[]
-  copyEvents CopyEvent[]
-  reports    Report[]
+  tags         PromptTag[]
+  likes        Like[]
+  savedItems   SavedItem[]
+  copyEvents   CopyEvent[]
+  reports      Report[]
+  translations PromptTranslation[]
 
   @@index([createdAt])
   @@map("prompts")
+}
+
+/// A cached machine translation of one prompt into one language. Cached
+/// because each miss costs a paid model call, so without this every viewer
+/// would re-bill the same translation.
+model PromptTranslation {
+  id          String   @id @default(cuid())
+  promptId    String
+  prompt      Prompt   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  language    String
+  title       String
+  description String
+  content     String
+  createdAt   DateTime @default(now())
+
+  @@unique([promptId, language])
+  @@map("prompt_translations")
 }
 
 model PromptTag {
