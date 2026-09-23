@@ -46,6 +46,27 @@ export async function loginAs(opts: Parameters<typeof createUser>[0] = {}) {
   return { request, user };
 }
 
+export async function createPrompt(overrides: Partial<{
+  authorId: string;
+  title: string;
+  description: string;
+  content: string;
+  visibility: "PUBLIC" | "PRIVATE";
+  status: "PUBLISHED" | "HIDDEN" | "PENDING";
+}> = {}) {
+  const author = overrides.authorId ? null : await createUser({ role: "ADMIN" });
+  return prisma.prompt.create({
+    data: {
+      title: overrides.title ?? "برومبت تجريبي",
+      description: overrides.description ?? "برومبت يُستخدم في الاختبارات.",
+      content: overrides.content ?? "أنت مساعد مفيد. اكتب عن {{topic}}.",
+      visibility: overrides.visibility ?? "PUBLIC",
+      status: overrides.status ?? "PUBLISHED",
+      authorId: overrides.authorId ?? author!.user.id,
+    },
+  });
+}
+
 export async function createCode(overrides: Partial<{
   authorId: string;
   title: string;

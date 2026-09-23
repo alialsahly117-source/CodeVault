@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { promptsService } from "../services/content.service";
+import { settingsService } from "../services/settings.service";
 import { useAuth } from "../features/auth/AuthContext";
 import { ReportDialog } from "../features/reports/ReportDialog";
 import {
@@ -19,6 +20,9 @@ import {
 } from "@codevault/ui";
 import { usePageMeta } from "../hooks/usePageMeta";
 import { downloadPromptFile } from "../lib/download";
+import type { PromptTranslation, TranslationLanguage } from "@codevault/types";
+
+const ARABIC_CHARACTERS = /[؀-ۿ]/;
 
 export function PromptDetailPage() {
   const { id = "" } = useParams();
@@ -28,23 +32,40 @@ export function PromptDetailPage() {
   const [reportOpen, setReportOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
+  const [translation, setTranslation] = useState<PromptTranslation | null>(null);
+  const [showTranslation, setShowTranslation] = useState(false);
 
   const { data: prompt, isLoading, isError } = useQuery({
     queryKey: ["prompt", id],
     queryFn: () => promptsService.get(id),
   });
 
+  const { data: settings } = useQuery({
+    queryKey: ["public-settings"],
+    queryFn: settingsService.get,
+  });
+
   usePageMeta(prompt?.title || "برومبت", prompt?.description);
 
+  // An Arabic prompt is worth offering in English and vice versa, so the
+  // direction follows the prompt's own text rather than the UI language.
+  const targetLanguage: TranslationLanguage = ARABIC_CHARACTERS.test(prompt?.content ?? "")
+    ? "en"
+    : "ar";
+  const targetLanguageLabel = targetLanguage === "en" ? "English" : "العربية";
+
+  const shown = showTranslation && translation ? translation : prompt;
+
   const rendered = useMemo(() => {
-    if (!prompt) return "";
-    let text = prompt.content;
+    const source = showTranslation && translation ? translation.content : prompt?.content;
+    if (!prompt || !source) return "";
+    let text = source;
     (prompt.variables || []).forEach((v) => {
       const value = values[v.key] ?? v.defaultValue ?? `{{${v.key}}}`;
       text = text.split(`{{${v.key}}}`).join(value);
     });
     return text;
-  }, [prompt, values]);
+  }, [prompt, values, showTranslation, translation]);
 
   const likeMutation = useMutation({
     mutationFn: () => promptsService.like(id),
@@ -57,6 +78,15 @@ export function PromptDetailPage() {
       toast.success(res.saved ? "تم الحفظ في مكتبتك" : "تمت إزالة الحفظ");
       queryClient.invalidateQueries({ queryKey: ["prompt", id] });
     },
+  });
+
+  const translateMutation = useMutation({
+    mutationFn: () => promptsService.translate(id, targetLanguage),
+    onSuccess: (data) => {
+      setTranslation(data);
+      setShowTranslation(true);
+    },
+    onError: () => toast.error("تعذّرت الترجمة. حاول مرة أخرى."),
   });
 
   const deleteMutation = useMutation({
@@ -125,7 +155,9 @@ export function PromptDetailPage() {
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text sm:text-3xl">{prompt.title}</h1>
+          <h1 className="text-2xl font-bold text-text sm:text-3xl" dir="auto">
+            {shown?.title}
+          </h1>
           {prompt.aiModel && <p className="mt-1 font-mono text-sm text-text-muted">{prompt.aiModel}</p>}
         </div>
         {canManage && (
@@ -140,7 +172,9 @@ export function PromptDetailPage() {
         )}
       </div>
 
-      <p className="mt-4 text-text-secondary">{prompt.description}</p>
+      <p className="mt-4 text-text-secondary" dir="auto">
+        {shown?.description}
+      </p>
 
       <div className="mt-4 flex flex-wrap gap-1.5">
         {prompt.tags.map(({ tag }) => (
@@ -199,7 +233,26 @@ export function PromptDetailPage() {
       )}
 
       <div className="mt-6 rounded-xl border border-border bg-bg-elevated p-4">
-        <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-text">{rendered}</pre>
+        {showTranslation && translation && (
+          <div className="mb-3 flex items-center justify-between gap-2 border-b border-border pb-2 text-xs text-text-muted">
+            <span>ترجمة آلية إلى {targetLanguageLabel}</span>
+            <button
+              type="button"
+              className="text-accent hover:underline"
+              onClick={() => setShowTranslation(false)}
+            >
+              عرض النص الأصلي
+            </button>
+          </div>
+        )}
+        {/* dir="auto" so a translated English prompt renders left-to-right
+            inside this otherwise right-to-left page. */}
+        <pre
+          dir="auto"
+          className="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-text"
+        >
+          {rendered}
+        </pre>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
@@ -207,6 +260,25 @@ export function PromptDetailPage() {
         <Button variant="secondary" onClick={handleDownload}>
           تحميل كملف
         </Button>
+        {settings?.translationEnabled && (
+          <Button
+            variant="secondary"
+            disabled={translateMutation.isPending}
+            onClick={() => {
+              if (showTranslation) return setShowTranslation(false);
+              // Already fetched once this visit — just flip back to it
+              // instead of paying for the same translation again.
+              if (translation) return setShowTranslation(true);
+              translateMutation.mutate();
+            }}
+          >
+            {translateMutation.isPending
+              ? "جارٍ الترجمة…"
+              : showTranslation
+                ? "النص الأصلي"
+                : `ترجم إلى ${targetLanguageLabel}`}
+          </Button>
+        )}
         <Button
           variant={prompt.liked ? "primary" : "secondary"}
           onClick={() => requireAuth(() => likeMutation.mutate())}

@@ -1,5 +1,12 @@
 import { api } from "../lib/api";
-import type { Code, Paginated, Prompt, SortOption } from "@codevault/types";
+import type {
+  Code,
+  Paginated,
+  Prompt,
+  PromptTranslation,
+  SortOption,
+  TranslationLanguage,
+} from "@codevault/types";
 
 export interface ListParams {
   q?: string;
@@ -69,6 +76,8 @@ export const promptsService = {
   like: (id: string) => api.post<{ liked: boolean }>(`/prompts/${id}/like`),
   save: (id: string) => api.post<{ saved: boolean }>(`/prompts/${id}/save`),
   copy: (id: string) => api.post<void>(`/prompts/${id}/copy`),
+  translate: (id: string, language: TranslationLanguage) =>
+    api.post<PromptTranslation>(`/prompts/${id}/translate`, { language }),
   report: (id: string, reason: string, details?: string) =>
     api.post<void>(`/prompts/${id}/report`, { reason, details }),
 };

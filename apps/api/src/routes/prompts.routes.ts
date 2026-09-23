@@ -3,9 +3,16 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, optionalAuth } from "../middleware/auth.js";
 import { requireRole } from "../middleware/rbac.js";
-import { writeRateLimit, apiRateLimit } from "../middleware/rateLimit.js";
+import { writeRateLimit, apiRateLimit, translateRateLimit } from "../middleware/rateLimit.js";
 import { AppError } from "../middleware/errorHandler.js";
-import { createPromptSchema, updatePromptSchema, listQuerySchema, reportSchema } from "../validators/content.validators.js";
+import {
+  createPromptSchema,
+  updatePromptSchema,
+  listQuerySchema,
+  reportSchema,
+  translatePromptSchema,
+} from "../validators/content.validators.js";
+import { translatePromptFields, translationConfigured } from "../lib/translate.js";
 import { slugify } from "../lib/slug.js";
 import { publicUserSelect } from "../lib/selects.js";
 import { canView } from "../lib/visibility.js";
@@ -172,6 +179,16 @@ router.patch("/:id", requireAuth, writeRateLimit, async (req, res, next) => {
       include: { tags: { include: { tag: true } }, category: true, project: true },
     });
 
+    // Cached translations describe the old text; once any translated field
+    // changes they are wrong, and stale-but-plausible is worse than absent.
+    const textChanged =
+      (data.title !== undefined && data.title !== existing.title) ||
+      (data.description !== undefined && data.description !== existing.description) ||
+      (data.content !== undefined && data.content !== existing.content);
+    if (textChanged) {
+      await prisma.promptTranslation.deleteMany({ where: { promptId: existing.id } });
+    }
+
     res.json(prompt);
   } catch (err) {
     next(err);
@@ -243,6 +260,70 @@ router.post("/:id/copy", optionalAuth, writeRateLimit, async (req, res, next) =>
     next(err);
   }
 });
+
+router.post(
+  "/:id/translate",
+  optionalAuth,
+  // Split across two handlers so an already-cached translation is served
+  // before translateRateLimit runs: a cache hit costs nothing, and counting
+  // it against a spend cap would throttle plain reading.
+  async (req, res, next) => {
+    try {
+      if (!translationConfigured) throw new AppError("الترجمة غير مُفعّلة على هذا الخادم.", 503);
+
+      const { language } = translatePromptSchema.parse(req.body);
+      await requireVisiblePrompt(req.params.id, req.user);
+
+      const cached = await prisma.promptTranslation.findUnique({
+        where: { promptId_language: { promptId: req.params.id, language } },
+      });
+      if (cached) {
+        return res.json({
+          language,
+          title: cached.title,
+          description: cached.description,
+          content: cached.content,
+          cached: true,
+        });
+      }
+
+      res.locals.language = language;
+      next();
+    } catch (err) {
+      next(err);
+    }
+  },
+  translateRateLimit,
+  async (req, res, next) => {
+    try {
+      const language = res.locals.language as "ar" | "en";
+      const prompt = await prisma.prompt.findUnique({
+        where: { id: req.params.id },
+        select: { title: true, description: true, content: true },
+      });
+      if (!prompt) throw new AppError("البرومبت غير موجود.", 404);
+
+      const translated = await translatePromptFields(prompt, language);
+
+      // upsert, not create: two viewers can race the same first translation.
+      const saved = await prisma.promptTranslation.upsert({
+        where: { promptId_language: { promptId: req.params.id, language } },
+        update: translated,
+        create: { promptId: req.params.id, language, ...translated },
+      });
+
+      res.json({
+        language,
+        title: saved.title,
+        description: saved.description,
+        content: saved.content,
+        cached: false,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 router.post("/:id/report", requireAuth, writeRateLimit, async (req, res, next) => {
   try {

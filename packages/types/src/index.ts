@@ -175,5 +175,17 @@ export interface SiteSettings {
   siteName: string;
   maintenanceMode: boolean;
   allowRegistration: boolean;
+  /** False when the API has no model credentials, so the UI hides the translate action. */
+  translationEnabled?: boolean;
   updatedAt?: string;
+}
+
+export type TranslationLanguage = "ar" | "en";
+
+export interface PromptTranslation {
+  language: TranslationLanguage;
+  title: string;
+  description: string;
+  content: string;
+  cached: boolean;
 }
