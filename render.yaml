@@ -47,10 +47,11 @@ services:
         value: ""
       - key: SMTP_FROM_NAME
         value: "CodeVault"
-      # Powers the "translate this prompt" action. Leave unset to ship with
-      # the feature switched off — the API reports translationEnabled: false
-      # and the button never renders. See lib/translate.ts.
-      - key: ANTHROPIC_API_KEY
+      # Powers the "translate this prompt" action, via the Gemini API. Leave
+      # unset to ship with the feature switched off — the API reports
+      # translationEnabled: false and the button never renders. See
+      # lib/translate.ts.
+      - key: GEMINI_API_KEY
         sync: false
       - key: GOOGLE_CLIENT_ID
         value: ""
