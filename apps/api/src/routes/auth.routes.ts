@@ -7,7 +7,7 @@ import { clearAuthCookies } from "../lib/cookies.js";
 import { startSession, rotateSession, endSession, revokeAllSessions } from "../lib/session.js";
 import { signTwoFactorPendingToken } from "../lib/jwt.js";
 import { sendPasswordResetEmail } from "../lib/email.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, type Role } from "../middleware/auth.js";
 import { authRateLimit } from "../middleware/rateLimit.js";
 import { AppError } from "../middleware/errorHandler.js";
 import {
@@ -239,12 +239,38 @@ router.get(
 router.get(
   "/google/callback",
   requireGoogleConfigured,
-  passport.authenticate("google", { session: false, failureRedirect: `${webUrl}/login?error=google` }),
+  (req, res, next) => {
+    passport.authenticate(
+      "google",
+      { session: false },
+      (err: unknown, user: { id: string; role: Role } | false, info?: { message?: string }) => {
+        // This runs in a browser tab, not an API client: anything thrown past
+        // here reaches the user as raw JSON in the address bar. Every failure
+        // goes back to the login page with a code it can explain instead.
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.error("Google OAuth callback failed:", err);
+          return res.redirect(`${webUrl}/login?error=google`);
+        }
+        if (!user) {
+          return res.redirect(`${webUrl}/login?error=${info?.message || "google"}`);
+        }
+        req.user = user;
+        next();
+      }
+    )(req, res, next);
+  },
   async (req, res) => {
-    const user = req.user as { id: string; role: "USER" | "EDITOR" | "MODERATOR" | "ADMIN" };
-    await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-    await startSession(res, user);
-    res.redirect(`${webUrl}/`);
+    try {
+      const user = req.user as { id: string; role: "USER" | "EDITOR" | "MODERATOR" | "ADMIN" };
+      await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+      await startSession(res, user);
+      res.redirect(`${webUrl}/`);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Google OAuth session start failed:", err);
+      res.redirect(`${webUrl}/login?error=google`);
+    }
   }
 );
 

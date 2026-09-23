@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import { prisma } from "../lib/prisma.js";
+import { resolveGoogleUser } from "../lib/googleAccount.js";
 
 const clientID = process.env.GOOGLE_CLIENT_ID;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -15,31 +15,15 @@ if (clientID && clientSecret && callbackURL) {
           const email = profile.emails?.[0]?.value;
           if (!email) return done(new Error("لا يوجد بريد إلكتروني من Google"));
 
-          let user = await prisma.user.findFirst({
-            where: { OR: [{ googleId: profile.id }, { email }] },
+          const result = await resolveGoogleUser({
+            googleId: profile.id,
+            email,
+            displayName: profile.displayName,
+            avatarUrl: profile.photos?.[0]?.value,
           });
 
-          if (!user) {
-            user = await prisma.user.create({
-              data: {
-                email,
-                googleId: profile.id,
-                profile: {
-                  create: {
-                    displayName: profile.displayName || email.split("@")[0],
-                    avatarUrl: profile.photos?.[0]?.value,
-                  },
-                },
-              },
-            });
-          } else if (!user.googleId) {
-            user = await prisma.user.update({
-              where: { id: user.id },
-              data: { googleId: profile.id },
-            });
-          }
-
-          done(null, user);
+          if (!result.ok) return done(null, false, { message: result.reason });
+          done(null, result.user);
         } catch (err) {
           done(err as Error);
         }
