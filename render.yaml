@@ -53,10 +53,14 @@ services:
       # lib/translate.ts.
       - key: GEMINI_API_KEY
         sync: false
+      # sync: false, NOT value: "" — these are set in the Render dashboard,
+      # and a literal empty value here makes any blueprint sync overwrite
+      # them with nothing, which silently breaks "continue with Google"
+      # (the API then redirects to /login?error=google_not_configured).
       - key: GOOGLE_CLIENT_ID
-        value: ""
+        sync: false
       - key: GOOGLE_CLIENT_SECRET
-        value: ""
+        sync: false
       - key: GOOGLE_CALLBACK_URL
         value: https://api.codevault.vip/api/auth/google/callback
 
