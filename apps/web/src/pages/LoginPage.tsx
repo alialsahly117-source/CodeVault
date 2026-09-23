@@ -30,6 +30,8 @@ export function LoginPage() {
     const error = searchParams.get("error");
     if (error === "google_not_configured") {
       toast.error("تسجيل الدخول عبر Google غير مُفعّل حاليًا على هذا الخادم.");
+    } else if (error === "google_account_conflict") {
+      toast.error("هذا البريد مرتبط بحساب Google آخر. سجّل الدخول بكلمة المرور بدلاً من ذلك.");
     } else if (error === "google") {
       toast.error("تعذر تسجيل الدخول عبر Google.");
     }
